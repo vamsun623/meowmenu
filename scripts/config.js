@@ -59,3 +59,27 @@ function formatTime(date) {
     minute: '2-digit'
   });
 }
+
+// 格式化取餐時間（只顯示 HH:MM）
+function formatPickupTime(timeValue) {
+  if (!timeValue) return '--:--';
+
+  // 如果已經是 HH:MM 格式，直接返回
+  if (typeof timeValue === 'string' && /^\d{1,2}:\d{2}$/.test(timeValue)) {
+    return timeValue;
+  }
+
+  // 如果是 ISO 日期格式或 Google Sheets 日期
+  try {
+    const date = new Date(timeValue);
+    if (!isNaN(date.getTime())) {
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
+    }
+  } catch (e) {
+    // 解析失敗，返回原值
+  }
+
+  return String(timeValue);
+}

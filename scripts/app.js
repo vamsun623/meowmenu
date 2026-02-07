@@ -577,7 +577,7 @@ async function renderOrders() {
             <div class="order-customer">👤 ${order.customer}</div>
           </div>
           <div class="order-time">
-            <div class="order-pickup-time">🕐 ${order.pickupTime} 取餐</div>
+            <div class="order-pickup-time">🕐 ${formatPickupTime(order.pickupTime)} 取餐</div>
             <div class="order-created-time">${formatTime(new Date(order.createdAt))}</div>
           </div>
           <span class="order-status ${statusBadgeClass}">${statusText}</span>
