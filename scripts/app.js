@@ -13,7 +13,8 @@ const State = {
     categories: [],
     availableImages: [],
     selectedCategory: 'all',
-    orderFilter: 'pending'
+    orderFilter: 'pending',
+    isSubmitting: false  // 防止重複送出
 };
 
 // DOM 元素快取
@@ -506,35 +507,55 @@ function showCheckoutModal() {
 async function handleCheckout(e) {
     e.preventDefault();
 
-    const hour = document.getElementById('pickupHour').value;
-    const minute = document.getElementById('pickupMinute').value;
-    const note = document.getElementById('orderNote').value.trim();
+    // 防止重複送出
+    if (State.isSubmitting) return;
+    State.isSubmitting = true;
 
-    const order = {
-        id: generateOrderId(),
-        customer: State.currentUser,
-        items: [...State.cart],
-        total: State.cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
-        pickupTime: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`,
-        note: note,
-        status: 'pending',
-        createdAt: new Date().toISOString()
-    };
+    // 禁用按鈕
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '處理中...';
+    }
 
-    // 儲存訂單
-    await API.createOrder(order);
-    State.orders.unshift(order);
+    try {
+        const hour = document.getElementById('pickupHour').value;
+        const minute = document.getElementById('pickupMinute').value;
+        const note = document.getElementById('orderNote').value.trim();
 
-    // 清空購物車
-    State.cart = [];
-    renderMenuItems();
-    renderCart();
+        const order = {
+            id: generateOrderId(),
+            customer: State.currentUser,
+            items: [...State.cart],
+            total: State.cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+            pickupTime: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`,
+            note: note,
+            status: 'pending',
+            createdAt: new Date().toISOString()
+        };
 
-    // 關閉結帳視窗
-    closeModal(DOM.checkoutModal);
+        // 儲存訂單
+        await API.createOrder(order);
+        State.orders.unshift(order);
 
-    // 顯示成功訊息
-    showSuccessMessage('🎉 點餐成功！', `您的訂單 ${order.id} 已成立，請於 ${order.pickupTime} 前來取餐！`);
+        // 清空購物車
+        State.cart = [];
+        renderMenuItems();
+        renderCart();
+
+        // 關閉結帳視窗
+        closeModal(DOM.checkoutModal);
+
+        // 顯示成功訊息
+        showSuccessMessage('🎉 點餐成功！', `您的訂單 ${order.id} 已成立，請於 ${order.pickupTime} 前來取餐！`);
+    } finally {
+        // 恢復狀態
+        State.isSubmitting = false;
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '確認送出';
+        }
+    }
 }
 
 // ========================================
