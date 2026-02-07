@@ -13,7 +13,7 @@ const State = {
     categories: [],
     availableImages: [],
     selectedCategory: 'all',
-    orderFilter: 'all'
+    orderFilter: 'pending'
 };
 
 // DOM 元素快取
@@ -613,6 +613,14 @@ async function renderOrders() {
             </button>
           </div>
         ` : ''}
+
+        ${!State.isAdmin && order.status === 'pending' && order.customer === State.currentUser ? `
+          <div class="order-actions">
+            <button class="btn btn-danger" onclick="cancelMyOrder('${order.id}')">
+              ✕ 取消我的訂單
+            </button>
+          </div>
+        ` : ''}
       </div>
     `;
     }).join('');
@@ -631,6 +639,32 @@ async function updateOrderStatus(orderId, status) {
 
     const message = status === 'delivered' ? '訂單已標記為送餐完成！' : '訂單已取消！';
     showSuccessMessage(status === 'delivered' ? '✅' : '❌', message);
+}
+
+// 顧客取消自己的訂單
+async function cancelMyOrder(orderId) {
+    const order = State.orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    // 確認是自己的訂單
+    if (order.customer !== State.currentUser) {
+        alert('您只能取消自己的訂單！');
+        return;
+    }
+
+    // 確認是未送餐狀態
+    if (order.status !== 'pending') {
+        alert('只能取消未送餐的訂單！');
+        return;
+    }
+
+    if (!confirm('確定要取消這筆訂單嗎？')) return;
+
+    await API.updateOrderStatus(orderId, 'cancelled');
+    order.status = 'cancelled';
+
+    renderOrders();
+    showSuccessMessage('❌', '您的訂單已取消！');
 }
 
 // ========================================
