@@ -18,9 +18,9 @@ const API = {
         try {
             const response = await fetch(CONFIG.API_URL, {
                 method: 'POST',
-                mode: 'cors',
+                redirect: 'follow',
                 headers: {
-                    'Content-Type': 'text/plain',
+                    'Content-Type': 'text/plain;charset=utf-8',
                 },
                 body: JSON.stringify({ action, ...data })
             });
@@ -29,7 +29,13 @@ const API = {
                 throw new Error('API 請求失敗');
             }
 
-            return await response.json();
+            const text = await response.text();
+            try {
+                return JSON.parse(text);
+            } catch {
+                console.error('JSON 解析失敗:', text);
+                return null;
+            }
         } catch (error) {
             console.error('API 錯誤:', error);
             return null;
