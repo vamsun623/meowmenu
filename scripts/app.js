@@ -36,6 +36,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initEventListeners();
     LocalStorage.init();
     loadInitialData();
+
+    // 載入上次儲存的姓名
+    const savedName = localStorage.getItem('meowmenu_username');
+    if (savedName) {
+        DOM.loginInput.value = savedName;
+    }
 });
 
 function initDOM() {
@@ -251,6 +257,9 @@ function handleLogin() {
         showLoginError('請輸入您的姓名！');
         return;
     }
+
+    // 儲存姓名到 localStorage
+    localStorage.setItem('meowmenu_username', name);
 
     State.currentUser = name;
     State.isAdmin = isAdmin(name);
