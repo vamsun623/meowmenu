@@ -14,7 +14,8 @@ const State = {
     availableImages: [],
     selectedCategory: 'all',
     orderFilter: 'pending',
-    isSubmitting: false  // 防止重複送出
+    isSubmitting: false,  // 防止重複送出
+    processingOrders: new Set()  // 正在處理的訂單 ID
 };
 
 // DOM 元素快取
@@ -323,6 +324,10 @@ function switchPage(pageName) {
 // ========================================
 
 function renderOrderPage() {
+    // 確保默認顯示全部餐點
+    if (!State.selectedCategory) {
+        State.selectedCategory = 'all';
+    }
     renderCategoryTabs();
     renderMenuItems();
     renderCart();
@@ -657,22 +662,35 @@ async function renderOrders() {
 }
 
 async function updateOrderStatus(orderId, status) {
-    await API.updateOrderStatus(orderId, status);
+    // 防止重複點擊
+    if (State.processingOrders.has(orderId)) return;
+    State.processingOrders.add(orderId);
 
-    // 更新本地狀態
+    // 樂觀更新：立即更新 UI
     const order = State.orders.find(o => o.id === orderId);
     if (order) {
         order.status = status;
     }
-
     renderOrders();
 
     const message = status === 'delivered' ? '訂單已標記為送餐完成！' : '訂單已取消！';
     showSuccessMessage(status === 'delivered' ? '✅' : '❌', message);
+
+    // 背景同步到 API
+    try {
+        await API.updateOrderStatus(orderId, status);
+    } catch (error) {
+        console.error('API 更新失敗:', error);
+    } finally {
+        State.processingOrders.delete(orderId);
+    }
 }
 
 // 顧客取消自己的訂單
 async function cancelMyOrder(orderId) {
+    // 防止重複點擊
+    if (State.processingOrders.has(orderId)) return;
+
     const order = State.orders.find(o => o.id === orderId);
     if (!order) return;
 
@@ -690,11 +708,21 @@ async function cancelMyOrder(orderId) {
 
     if (!confirm('確定要取消這筆訂單嗎？')) return;
 
-    await API.updateOrderStatus(orderId, 'cancelled');
-    order.status = 'cancelled';
+    State.processingOrders.add(orderId);
 
+    // 樂觀更新：立即更新 UI
+    order.status = 'cancelled';
     renderOrders();
     showSuccessMessage('❌', '您的訂單已取消！');
+
+    // 背景同步到 API
+    try {
+        await API.updateOrderStatus(orderId, 'cancelled');
+    } catch (error) {
+        console.error('API 更新失敗:', error);
+    } finally {
+        State.processingOrders.delete(orderId);
+    }
 }
 
 // ========================================
