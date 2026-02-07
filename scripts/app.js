@@ -33,16 +33,19 @@ const FOOD_EMOJIS = [
 // 初始化
 // ========================================
 
-// 資料載入 Promise 定義
-let initialDataPromise = null;
+// 資料同步 Promise 定義
+let apiSyncPromise = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initDOM();
     initEventListeners();
     LocalStorage.init();
 
-    // 開始載入資料並存入 Promise 中
-    initialDataPromise = loadInitialData();
+    // 1. 立即從本地載入資料 (樂觀載入，不等待網路)
+    loadLocalData();
+
+    // 2. 背景與 API 同步最新資料
+    apiSyncPromise = syncDataWithAPI();
 
     // 載入上次儲存的姓名
     const savedName = localStorage.getItem('meowmenu_username');
@@ -166,11 +169,46 @@ function initEventListeners() {
     });
 }
 
+// 只從本地快取或預設值載入資料 (這非常快)
+function loadLocalData() {
+    State.menu = LocalStorage.getMenu();
+    State.categories = LocalStorage.getCategories();
+    State.orders = LocalStorage.getOrders();
+    // 圖片清單暫時只能異步 fetch，但我們放在這裡嘗試觸發
+    loadAvailableImages();
+}
+
+// 與 API 同步最新資料 (背景執行)
+async function syncDataWithAPI() {
+    try {
+        const [menu, categories, orders] = await Promise.all([
+            API.getMenu(),
+            API.getCategories(),
+            API.getOrders()
+        ]);
+
+        State.menu = menu;
+        State.categories = categories;
+        State.orders = orders;
+
+        // 如果已經進入應用程式頁面，則刷新 UI
+        if (State.currentUser) {
+            if (State.currentPage === 'order') renderOrderPage();
+            if (State.currentPage === 'orders') renderOrders();
+            if (State.isAdmin && State.currentPage === 'menu') renderMenuManagement();
+        }
+
+        return true;
+    } catch (error) {
+        console.error('API 同步失敗:', error);
+        return false;
+    }
+}
+
 async function loadInitialData() {
-    State.menu = await API.getMenu();
-    State.categories = await API.getCategories();
-    State.orders = await API.getOrders();
-    await loadAvailableImages();
+    // 此函式保留給需要強制完全載入的地方
+    loadLocalData();
+    return await syncDataWithAPI();
 }
 
 // ========================================
@@ -278,13 +316,6 @@ async function handleLogin() {
     // 儲存姓名到 localStorage
     localStorage.setItem('meowmenu_username', name);
 
-    // 確保資料已載入 (等待全域載入 Promise)
-    if (initialDataPromise) {
-        await initialDataPromise;
-    } else {
-        await loadInitialData();
-    }
-
     State.currentUser = name;
     State.isAdmin = isAdmin(name);
 
@@ -298,19 +329,21 @@ async function handleLogin() {
         DOM.menuNavBtn.style.display = 'none';
     }
 
-    // 切換到主應用程式
+    // 切換到主應用程式 (秒進，不等待 API)
     DOM.loginContainer.style.display = 'none';
     DOM.appContainer.classList.add('show');
 
     // 重設分類為全部，確保餐點正確顯示
     State.selectedCategory = 'all';
 
-    // 載入並渲染頁面
+    // 立即使用本地資料渲染
     renderOrderPage();
     renderOrdersPage();
     if (State.isAdmin) {
         renderMenuManagement();
     }
+
+    // 如果 API 同步還在跑，它完成後會自動更新 UI
 }
 
 function showLoginError(message) {
