@@ -33,11 +33,16 @@ const FOOD_EMOJIS = [
 // 初始化
 // ========================================
 
+// 資料載入 Promise 定義
+let initialDataPromise = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     initDOM();
     initEventListeners();
     LocalStorage.init();
-    loadInitialData();
+
+    // 開始載入資料並存入 Promise 中
+    initialDataPromise = loadInitialData();
 
     // 載入上次儲存的姓名
     const savedName = localStorage.getItem('meowmenu_username');
@@ -131,6 +136,16 @@ function initEventListeners() {
         if (e.key === 'Enter') {
             e.preventDefault();
             handleAddCategory();
+        }
+    });
+
+    // 分類標籤點擊 (委派)
+    DOM.categoryTabs.addEventListener('click', (e) => {
+        const tab = e.target.closest('.category-tab');
+        if (tab) {
+            State.selectedCategory = tab.dataset.category;
+            renderCategoryTabs();
+            renderMenuItems();
         }
     });
 
@@ -252,7 +267,7 @@ function selectImage(imagePath, target = 'add') {
 // 登入處理
 // ========================================
 
-function handleLogin() {
+async function handleLogin() {
     const name = DOM.loginInput.value.trim();
 
     if (!name) {
@@ -262,6 +277,13 @@ function handleLogin() {
 
     // 儲存姓名到 localStorage
     localStorage.setItem('meowmenu_username', name);
+
+    // 確保資料已載入 (等待全域載入 Promise)
+    if (initialDataPromise) {
+        await initialDataPromise;
+    } else {
+        await loadInitialData();
+    }
 
     State.currentUser = name;
     State.isAdmin = isAdmin(name);
@@ -345,14 +367,6 @@ function renderCategoryTabs() {
       ${cat === 'all' ? '🍽️ 全部' : getCategoryEmoji(cat) + ' ' + cat}
     </button>
   `).join('');
-
-    DOM.categoryTabs.addEventListener('click', (e) => {
-        if (e.target.classList.contains('category-tab')) {
-            State.selectedCategory = e.target.dataset.category;
-            renderCategoryTabs();
-            renderMenuItems();
-        }
-    });
 }
 
 function getCategoryEmoji(category) {
