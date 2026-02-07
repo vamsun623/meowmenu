@@ -280,6 +280,9 @@ function handleLogin() {
     DOM.loginContainer.style.display = 'none';
     DOM.appContainer.classList.add('show');
 
+    // 重設分類為全部，確保餐點正確顯示
+    State.selectedCategory = 'all';
+
     // 載入並渲染頁面
     renderOrderPage();
     renderOrdersPage();
