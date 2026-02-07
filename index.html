@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="喵喵豬豬早餐店線上點餐系統 - 新鮮美味的早餐，每天為您準備">
+  <title>喵喵豬豬早餐店 🐱🐷</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+
+<body>
+  <!-- ==================== 登入頁面 ==================== -->
+  <div id="loginContainer" class="login-container">
+    <div class="login-card">
+      <div class="login-logo">🐱🐷</div>
+      <h1 class="login-title">喵喵豬豬早餐店</h1>
+      <p class="login-subtitle">歡迎光臨！請輸入您的姓名開始點餐</p>
+
+      <input type="text" id="loginInput" class="login-input" placeholder="請輸入您的姓名" maxlength="20" autocomplete="name">
+      <p id="loginError" class="login-error"></p>
+
+      <button id="loginBtn" class="login-btn">
+        🍳 開始點餐
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== 主應用程式 ==================== -->
+  <div id="appContainer" class="app-container">
+    <!-- 導覽列 -->
+    <nav class="navbar">
+      <div class="navbar-brand">
+        <span class="navbar-brand-icon">🐱🐷</span>
+        <span>喵喵豬豬早餐店</span>
+      </div>
+
+      <div class="navbar-user">
+        <span>👤</span>
+        <span id="userDisplay">訪客</span>
+      </div>
+
+      <div class="navbar-nav">
+        <button class="nav-btn active" data-page="order">🍳 點餐</button>
+        <button class="nav-btn" data-page="orders">📋 訂單</button>
+        <button id="menuNavBtn" class="nav-btn admin-only" data-page="menu" style="display: none;">
+          ⚙️ 菜單管理
+        </button>
+      </div>
+    </nav>
+
+    <!-- ==================== 點餐頁面 ==================== -->
+    <div id="orderPage" class="page active">
+      <h2 class="page-title">
+        <span class="page-title-icon">🍳</span>
+        今日菜單
+      </h2>
+
+      <!-- 分類標籤 -->
+      <div id="categoryTabs" class="category-tabs"></div>
+
+      <!-- 菜單網格 -->
+      <div id="menuGrid" class="menu-grid"></div>
+
+      <!-- 購物車 -->
+      <div class="cart-section">
+        <h3 class="cart-title">
+          <span>🛒</span>
+          我的訂單
+        </h3>
+
+        <div id="cartItems" class="cart-items"></div>
+
+        <div class="cart-total">
+          <span>總計</span>
+          <span id="cartTotal" class="cart-total-price">$0</span>
+        </div>
+
+        <button id="cartCheckoutBtn" class="cart-checkout-btn" disabled>
+          ✓ 確認點餐
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== 訂單管理頁面 ==================== -->
+    <div id="ordersPage" class="page">
+      <h2 class="page-title">
+        <span class="page-title-icon">📋</span>
+        訂單管理
+      </h2>
+
+      <!-- 篩選按鈕 -->
+      <div id="ordersFilter" class="orders-filter">
+        <button class="filter-btn active" data-filter="all">全部</button>
+        <button class="filter-btn" data-filter="pending">未送餐</button>
+        <button class="filter-btn" data-filter="delivered">已送餐</button>
+        <button class="filter-btn" data-filter="cancelled">已取消</button>
+      </div>
+
+      <!-- 訂單列表 -->
+      <div id="ordersList" class="orders-list"></div>
+    </div>
+
+    <!-- ==================== 菜單管理頁面 ==================== -->
+    <div id="menuPage" class="page">
+      <h2 class="page-title">
+        <span class="page-title-icon">⚙️</span>
+        菜單管理
+      </h2>
+
+      <div class="menu-management">
+        <!-- 分類管理 -->
+        <div class="category-management">
+          <h3 class="menu-add-title">📂 分類管理</h3>
+          <div id="categoriesList" class="category-list"></div>
+          <div class="category-add-form">
+            <input type="text" id="newCategoryInput" class="form-input" placeholder="輸入新分類名稱" maxlength="10">
+            <button id="addCategoryBtn" class="btn btn-primary">新增分類</button>
+          </div>
+        </div>
+
+        <!-- 新增餐點 -->
+        <div class="menu-add-section">
+          <h3 class="menu-add-title">➕ 新增餐點</h3>
+          <form id="addMenuForm" class="menu-form">
+            <div class="form-group">
+              <label class="form-label">餐點名稱 <span class="required">*</span></label>
+              <input type="text" id="menuItemName" class="form-input" placeholder="例：起司蛋餅" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">價格 <span class="required">*</span></label>
+              <input type="number" id="menuItemPrice" class="form-input" placeholder="例：45" min="1" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">分類 <span class="required">*</span></label>
+              <select id="menuCategorySelect" class="form-select" required></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">圖片</label>
+              <div class="image-picker">
+                <div class="image-picker-options">
+                  <button type="button" class="image-picker-btn active" data-type="emoji">😊 表情符號</button>
+                  <button type="button" class="image-picker-btn" data-type="image">🖼️ 資料夾圖片</button>
+                </div>
+                <div id="emojiPickerArea" class="emoji-picker-grid"></div>
+                <div id="imagePickerArea" class="image-preview-area" style="display: none;"></div>
+                <input type="hidden" id="menuItemImage" value="🍴">
+              </div>
+            </div>
+            <div class="form-group" style="display: flex; align-items: flex-end;">
+              <button type="submit" class="btn btn-success" style="width: 100%;">✓ 新增餐點</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- 餐點列表 (電腦版) -->
+        <div class="menu-list-section">
+          <h3 class="menu-list-title">📝 餐點列表 <span
+              style="font-size: 12px; color: var(--text-secondary);">（拖曳可調整順序）</span></h3>
+          <table class="menu-table draggable-table">
+            <thead>
+              <tr>
+                <th style="width: 40px;">排序</th>
+                <th>圖示</th>
+                <th>名稱</th>
+                <th>分類</th>
+                <th>價格</th>
+                <th>啟用</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="menuTableBody"></tbody>
+          </table>
+          <!-- 餐點列表 (手機版) -->
+          <div id="menuCardsMobile" class="menu-cards-mobile"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 彈窗：結帳 ==================== -->
+  <div id="checkoutModal" class="modal-overlay">
+    <div class="modal">
+      <h3 class="modal-title">
+        <span>📝</span>
+        確認訂單
+      </h3>
+
+      <form id="checkoutForm">
+        <div class="form-group">
+          <label class="form-label">領餐時間 <span class="required">*</span></label>
+          <div class="time-picker">
+            <select id="pickupHour" class="form-select" required></select>
+            <span style="align-self: center; font-size: 20px;">:</span>
+            <select id="pickupMinute" class="form-select" required></select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">備註 (選填)</label>
+          <textarea id="orderNote" class="form-textarea" placeholder="例：不要加辣、蛋全熟..."></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeCheckoutModal()">取消</button>
+          <button type="submit" class="btn btn-success">確認送出</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== 彈窗：編輯餐點 ==================== -->
+  <div id="editMenuModal" class="modal-overlay">
+    <div class="modal">
+      <h3 class="modal-title">
+        <span>✏️</span>
+        編輯餐點
+      </h3>
+
+      <form id="editMenuForm">
+        <input type="hidden" id="editMenuId">
+
+        <div class="form-group">
+          <label class="form-label">餐點名稱 <span class="required">*</span></label>
+          <input type="text" id="editMenuName" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">價格 <span class="required">*</span></label>
+          <input type="number" id="editMenuPrice" class="form-input" min="1" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">分類 <span class="required">*</span></label>
+          <select id="editMenuCategory" class="form-select" required></select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">圖片</label>
+          <div class="image-picker">
+            <div class="image-picker-options">
+              <button type="button" class="image-picker-btn active" data-type="emoji" data-target="edit">😊
+                表情符號</button>
+              <button type="button" class="image-picker-btn" data-type="image" data-target="edit">🖼️ 資料夾圖片</button>
+            </div>
+            <div id="editEmojiPickerArea" class="emoji-picker-grid"></div>
+            <div id="editImagePickerArea" class="image-preview-area" style="display: none;"></div>
+            <input type="hidden" id="editMenuImage" value="🍴">
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+          <button type="submit" class="btn btn-primary">儲存變更</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== 成功訊息 ==================== -->
+  <div id="successModal" class="modal-overlay">
+    <div class="success-message">
+      <div class="success-icon">🎉</div>
+      <h3 class="success-title">成功！</h3>
+      <p class="success-text"></p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="scripts/config.js"></script>
+  <script src="scripts/api.js"></script>
+  <script src="scripts/app.js"></script>
+</body>
+
+</html>
