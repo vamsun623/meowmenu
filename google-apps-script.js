@@ -55,7 +55,7 @@ function getSpreadsheet() {
 // ========================================
 
 function initSpreadsheet() {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet();
 
     // 建立訂單表
     let ordersSheet = ss.getSheetByName(SHEETS.ORDERS);
@@ -190,7 +190,7 @@ function doPost(e) {
 // ========================================
 
 function getOrders() {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet();
     const sheet = ss.getSheetByName(SHEETS.ORDERS);
     const lastRow = sheet.getLastRow();
 
@@ -217,7 +217,7 @@ function getOrders() {
 }
 
 function createOrder(order) {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet();
     const sheet = ss.getSheetByName(SHEETS.ORDERS);
 
     sheet.appendRow([
@@ -235,7 +235,7 @@ function createOrder(order) {
 }
 
 function updateOrderStatus(orderId, status) {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet();
     const sheet = ss.getSheetByName(SHEETS.ORDERS);
     const lastRow = sheet.getLastRow();
 
@@ -254,7 +254,7 @@ function updateOrderStatus(orderId, status) {
 // ========================================
 
 function getMenu() {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet();
     const sheet = ss.getSheetByName(SHEETS.MENU);
     const lastRow = sheet.getLastRow();
 
@@ -276,7 +276,7 @@ function getMenu() {
 }
 
 function addMenuItem(item) {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet();
     const sheet = ss.getSheetByName(SHEETS.MENU);
     const lastRow = sheet.getLastRow();
 
@@ -303,7 +303,7 @@ function addMenuItem(item) {
 }
 
 function updateMenuItem(item) {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet();
     const sheet = ss.getSheetByName(SHEETS.MENU);
     const lastRow = sheet.getLastRow();
 
@@ -324,7 +324,7 @@ function updateMenuItem(item) {
 }
 
 function deleteMenuItem(itemId) {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet();
     const sheet = ss.getSheetByName(SHEETS.MENU);
     const lastRow = sheet.getLastRow();
 
