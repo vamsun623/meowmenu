@@ -149,23 +149,27 @@ const API = {
         return LocalStorage.getCategories();
     },
 
-    // 檢查伺服器版本
-    async checkVersion() {
+    // 檢查伺服器連線與版本
+    async checkSession() {
         const result = await this.request('checkVersion');
         if (result && result.success) {
-            return result.version;
+            this.log('伺服器連線正常', result);
+            return result;
         }
         return null;
     },
 
     // 比對版本並警告
     async validateVersion() {
-        const serverVersion = await this.checkVersion();
-        if (serverVersion && serverVersion !== API_VERSION) {
-            console.warn(`[API] 版本不符！前端: ${API_VERSION}, 伺服器: ${serverVersion}。請重新部署 GAS！`);
-            return false;
+        const info = await this.checkSession();
+        if (info) {
+            if (info.version !== API_VERSION) {
+                console.warn(`[API] 版本不符！前端: ${API_VERSION}, 伺服器: ${info.version}。請重新部署 GAS！`);
+                return { valid: false, info };
+            }
+            return { valid: true, info };
         }
-        return true;
+        return { valid: false, info: null };
     },
 
     // 新增分類

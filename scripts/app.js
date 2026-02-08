@@ -365,10 +365,21 @@ async function handleLogin() {
         renderMenuManagement();
     }
 
-    // 檢查 API 版本同步
-    API.validateVersion().then(isValid => {
-        if (!isValid) {
-            alert('⚠️ 偵測到系統更新，部分功能可能無法正常運作。請聯繫管理員確保 Google Scripts 已重新部署至最新版本！');
+    // 檢查 API 版本同步與診斷資訊
+    API.validateVersion().then(({ valid, info }) => {
+        const statusEl = document.getElementById('versionStatus');
+        if (statusEl) {
+            if (valid) {
+                statusEl.innerHTML = '✅ 連線正常';
+                statusEl.style.color = 'green';
+            } else if (info) {
+                statusEl.innerHTML = `⚠️ 伺服器版本 (${info.version}) 不符！`;
+                statusEl.style.color = 'red';
+                alert('⚠️ 偵測到系統版本不符。請聯繫管理員確保 Google Scripts 已重新部署為 v' + API_VERSION);
+            } else {
+                statusEl.innerHTML = '❌ 伺服器連線失敗';
+                statusEl.style.color = 'red';
+            }
         }
     });
 
@@ -987,14 +998,22 @@ async function handleCategoryDrop(e) {
     State.categories.splice(toIndex, 0, cat);
 
     // 更新排序到 API
-    await API.updateCategoryOrder(State.categories);
+    try {
+        const success = await API.updateCategoryOrder(State.categories);
+
+        if (success) {
+            showSuccessMessage('✅', '分類順序已更新並儲存！');
+        } else {
+            alert('⚠️ 警告：無法同步到伺服器。您的順序已暫存在本地，但重新登入可能會遺失。請檢查網路或 GAS 部署！');
+        }
+    } catch (err) {
+        console.error('更新排序異常:', err);
+    }
 
     // 重新渲染相關 UI
     renderCategoriesManagement();
     renderCategorySelects();
     renderCategoryTabs();
-
-    showSuccessMessage('✅', '分類順序已更新！');
 }
 
 function handleDragStart(e) {

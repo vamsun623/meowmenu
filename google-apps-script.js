@@ -31,6 +31,22 @@ const SHEETS = {
 };
 
 // ========================================
+// 輔助函式
+// ========================================
+
+// 取得試算表實例 (加入容錯機制)
+function getSpreadsheet() {
+    if (typeof SPREADSHEET_ID !== 'undefined' && SPREADSHEET_ID && SPREADSHEET_ID !== '您的試算表ID') {
+        try {
+            return SpreadsheetApp.openById(SPREADSHEET_ID);
+        } catch (e) {
+            console.error('無法開啟指定的 SPREADSHEET_ID，嘗試開啟當前活動試算表:', e);
+        }
+    }
+    return SpreadsheetApp.getActiveSpreadsheet();
+}
+
+// ========================================
 // 初始化試算表
 // ========================================
 
@@ -136,11 +152,14 @@ function doPost(e) {
             case 'deleteCategory':
                 result = deleteCategory(data.category);
                 break;
+            case 'updateCategoryOrder':
+                result = updateCategoryOrder(data.categories);
+                break;
             case 'updateMenuOrder':
                 result = updateMenuOrder(data.menuIds);
                 break;
             case 'checkVersion':
-                result = { success: true, version: API_VERSION };
+                result = { success: true, version: API_VERSION, spreadsheetName: getSpreadsheet().getName() };
                 break;
             default:
                 result = { success: false, error: '未知的操作：' + action };
@@ -315,8 +334,10 @@ function deleteMenuItem(itemId) {
 // ========================================
 
 function getCategories() {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet();
     const sheet = ss.getSheetByName(SHEETS.CATEGORIES);
+    if (!sheet) return { success: false, error: '找不到分類工作表' };
+
     const lastRow = sheet.getLastRow();
 
     if (lastRow < 2) {
@@ -330,7 +351,7 @@ function getCategories() {
 }
 
 function addCategory(category) {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet();
     const sheet = ss.getSheetByName(SHEETS.CATEGORIES);
 
     // 檢查是否已存在
@@ -344,7 +365,7 @@ function addCategory(category) {
 }
 
 function deleteCategory(category) {
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet();
     const sheet = ss.getSheetByName(SHEETS.CATEGORIES);
     const lastRow = sheet.getLastRow();
 
@@ -364,13 +385,19 @@ function updateCategoryOrder(categories) {
             return { success: false, error: '無效的分類資料' };
         }
 
-        const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-        const sheet = ss.getSheetByName(SHEETS.CATEGORIES);
+        const ss = getSpreadsheet();
+        let sheet = ss.getSheetByName(SHEETS.CATEGORIES);
 
-        // 強制清除 A 欄 A2 之後的所有內容
-        const lastRow = sheet.getLastRow();
-        if (lastRow >= 2) {
-            sheet.getRange(2, 1, lastRow - 1, 1).clear();
+        // 如果工作表不存在，則建立它
+        if (!sheet) {
+            sheet = ss.insertSheet(SHEETS.CATEGORIES);
+            sheet.appendRow(['分類名稱']);
+        }
+
+        // 強制清除 A 欄 A2 之後的所有內容 (最高到 100 行)
+        const maxRows = sheet.getMaxRows();
+        if (maxRows >= 2) {
+            sheet.getRange(2, 1, Math.min(maxRows - 1, 100), 1).clear();
         }
 
         // 過濾有效分類並寫入
@@ -383,19 +410,20 @@ function updateCategoryOrder(categories) {
             sheet.getRange(2, 1, rows.length, 1).setValues(rows);
         }
 
-        // 刷新試算表快取，確保下次讀取是最新的
+        // 強制刷新並等待
         SpreadsheetApp.flush();
+        Utilities.sleep(200); // 稍微等待寫入完成
 
         return { success: true, count: validCategories.length, version: API_VERSION };
     } catch (e) {
-        return { success: false, error: '發生異常: ' + e.toString() };
+        return { success: false, error: '重新排序失敗: ' + e.toString() };
     }
 }
 
 function updateMenuOrder(menuIds) {
     if (!menuIds || !Array.isArray(menuIds)) return { success: false, error: '無效的菜單排序資料' };
 
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const ss = getSpreadsheet();
     const sheet = ss.getSheetByName(SHEETS.MENU);
     const lastRow = sheet.getLastRow();
 
