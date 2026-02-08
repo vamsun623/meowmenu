@@ -349,26 +349,28 @@ async function handleLogin() {
     DOM.userDisplay.textContent = name + (State.isAdmin ? ' 👑' : '');
 
     // 顯示/隱藏菜單管理按鈕
-} else {
-    DOM.menuNavBtn.style.display = 'none';
-}
+    if (State.isAdmin) {
+        DOM.menuNavBtn.style.display = 'block';
+    } else {
+        DOM.menuNavBtn.style.display = 'none';
+    }
 
-AudioManager.play('meow');
-setTimeout(() => AudioManager.play('success'), 200);
+    AudioManager.play('meow');
+    setTimeout(() => AudioManager.play('success'), 200);
 
-// 切換到主應用程式 (秒進，不等待 API)
-DOM.loginContainer.style.display = 'none';
-DOM.appContainer.classList.add('show');
+    // 切換到主應用程式 (秒進，不等待 API)
+    DOM.loginContainer.style.display = 'none';
+    DOM.appContainer.classList.add('show');
 
-// 重設分類為全部，確保餐點正確顯示
-State.selectedCategory = 'all';
+    // 重設分類為全部，確保餐點正確顯示
+    State.selectedCategory = 'all';
 
-// 立即使用本地資料渲染
-renderOrderPage();
-renderOrdersPage();
-if (State.isAdmin) {
-    renderMenuManagement();
-}
+    // 立即使用本地資料渲染
+    renderOrderPage();
+    renderOrdersPage();
+    if (State.isAdmin) {
+        renderMenuManagement();
+    }
 }
 
 // 執行系統版本與連線檢測
