@@ -36,14 +36,14 @@ const AudioManager = {
             const now = this.audioCtx.currentTime;
 
             if (type === 'click') {
-                // 短促的點擊聲
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(800, now);
-                osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                // 短促的點擊聲 (更明顯的 Pop 聲)
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.05);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
                 osc.start(now);
-                osc.stop(now + 0.1);
+                osc.stop(now + 0.05);
             } else if (type === 'add') {
                 // 輕快的上升音 (Ping)
                 osc.type = 'triangle';

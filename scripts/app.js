@@ -90,7 +90,10 @@ function initDOM() {
 
 function initEventListeners() {
     // 登入
-    DOM.loginBtn.addEventListener('click', handleLogin);
+    DOM.loginBtn.addEventListener('click', () => {
+        AudioManager.play('click');
+        handleLogin();
+    });
     DOM.loginInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleLogin();
     });
@@ -107,11 +110,15 @@ function initEventListeners() {
     });
 
     // 結帳按鈕
-    DOM.cartCheckoutBtn.addEventListener('click', showCheckoutModal);
+    DOM.cartCheckoutBtn.addEventListener('click', () => {
+        AudioManager.play('click');
+        showCheckoutModal();
+    });
 
     // 訂單篩選
     DOM.ordersFilter.addEventListener('click', (e) => {
         if (e.target.classList.contains('filter-btn')) {
+            AudioManager.play('click');
             State.orderFilter = e.target.dataset.filter;
             updateOrdersFilter();
             renderOrders();
@@ -122,6 +129,7 @@ function initEventListeners() {
     document.querySelectorAll('.modal-overlay').forEach(modal => {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
+                AudioManager.play('click');
                 closeModal(modal);
             }
         });
@@ -137,7 +145,10 @@ function initEventListeners() {
     document.getElementById('editMenuForm').addEventListener('submit', handleEditMenuItem);
 
     // 新增分類
-    document.getElementById('addCategoryBtn').addEventListener('click', handleAddCategory);
+    DOM.addCategoryBtn.addEventListener('click', () => {
+        AudioManager.play('click');
+        handleAddCategory();
+    });
     document.getElementById('newCategoryInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -666,6 +677,7 @@ async function handleCheckout(e) {
         // 恢復狀態
         State.isSubmitting = false;
         if (submitBtn) {
+            AudioManager.play('click');
             submitBtn.disabled = false;
             submitBtn.textContent = '確認送出';
         }
@@ -1258,10 +1270,12 @@ function showSuccessMessage(icon, text) {
 
 // 關閉編輯彈窗
 function closeEditModal() {
+    AudioManager.play('click');
     closeModal(DOM.editMenuModal);
 }
 
 // 關閉結帳彈窗
 function closeCheckoutModal() {
+    AudioManager.play('click');
     closeModal(DOM.checkoutModal);
 }
