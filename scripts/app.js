@@ -55,6 +55,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedName) {
         DOM.loginInput.value = savedName;
     }
+
+    // 自動「喵」一聲 (處理自動播放限制)
+    const autoMeow = () => {
+        AudioManager.play('meow');
+        document.removeEventListener('click', autoMeow);
+        document.removeEventListener('keydown', autoMeow);
+    };
+
+    // 嘗試直接播，如果被擋就掛監聽器
+    try {
+        AudioManager.play('meow');
+    } catch (e) {
+        document.addEventListener('click', autoMeow);
+        document.addEventListener('keydown', autoMeow);
+    }
 });
 
 function initDOM() {
