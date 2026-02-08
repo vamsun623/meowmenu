@@ -86,6 +86,8 @@ function initDOM() {
     DOM.imagePickerArea = document.getElementById('imagePickerArea');
     DOM.editEmojiPickerArea = document.getElementById('editEmojiPickerArea');
     DOM.editImagePickerArea = document.getElementById('editImagePickerArea');
+    DOM.addCategoryBtn = document.getElementById('addCategoryBtn');
+    DOM.newCategoryInput = document.getElementById('newCategoryInput');
 }
 
 function initEventListeners() {

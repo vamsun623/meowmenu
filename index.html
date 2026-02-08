@@ -163,7 +163,8 @@
               </div>
             </div>
             <div class="form-group" style="display: flex; align-items: flex-end;">
-              <button type="submit" class="btn btn-success" style="width: 100%;">✓ 新增餐點</button>
+              <button type="submit" class="btn btn-success" style="width: 100%;" onclick="AudioManager.play('click')">✓
+                新增餐點</button>
             </div>
           </form>
         </div>
@@ -218,7 +219,7 @@
 
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" onclick="closeCheckoutModal()">取消</button>
-          <button type="submit" class="btn btn-success">確認送出</button>
+          <button type="submit" class="btn btn-success" onclick="AudioManager.play('click')">確認送出</button>
         </div>
       </form>
     </div>
@@ -266,7 +267,7 @@
 
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" onclick="closeEditModal()">取消</button>
-          <button type="submit" class="btn btn-primary">儲存變更</button>
+          <button type="submit" class="btn btn-primary" onclick="AudioManager.play('click')">儲存變更</button>
         </div>
       </form>
     </div>
