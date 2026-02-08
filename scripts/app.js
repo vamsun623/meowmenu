@@ -331,6 +331,7 @@ function selectImage(imagePath, target = 'add') {
 // ========================================
 
 async function handleLogin() {
+    AudioManager.play('click');
     const name = DOM.loginInput.value.trim();
 
     if (!name) {
@@ -348,25 +349,26 @@ async function handleLogin() {
     DOM.userDisplay.textContent = name + (State.isAdmin ? ' 👑' : '');
 
     // 顯示/隱藏菜單管理按鈕
-    if (State.isAdmin) {
-        DOM.menuNavBtn.style.display = 'block';
-    } else {
-        DOM.menuNavBtn.style.display = 'none';
-    }
+} else {
+    DOM.menuNavBtn.style.display = 'none';
+}
 
-    // 切換到主應用程式 (秒進，不等待 API)
-    DOM.loginContainer.style.display = 'none';
-    DOM.appContainer.classList.add('show');
+AudioManager.play('meow');
+setTimeout(() => AudioManager.play('success'), 200);
 
-    // 重設分類為全部，確保餐點正確顯示
-    State.selectedCategory = 'all';
+// 切換到主應用程式 (秒進，不等待 API)
+DOM.loginContainer.style.display = 'none';
+DOM.appContainer.classList.add('show');
 
-    // 立即使用本地資料渲染
-    renderOrderPage();
-    renderOrdersPage();
-    if (State.isAdmin) {
-        renderMenuManagement();
-    }
+// 重設分類為全部，確保餐點正確顯示
+State.selectedCategory = 'all';
+
+// 立即使用本地資料渲染
+renderOrderPage();
+renderOrdersPage();
+if (State.isAdmin) {
+    renderMenuManagement();
+}
 }
 
 // 執行系統版本與連線檢測
@@ -406,6 +408,7 @@ function showLoginError(message) {
 // ========================================
 
 function switchPage(pageName) {
+    AudioManager.play('click');
     State.currentPage = pageName;
 
     DOM.navBtns.forEach(btn => {
@@ -525,6 +528,12 @@ function updateCart(itemId, change) {
         if (State.cart[cartIndex].quantity <= 0) {
             State.cart.splice(cartIndex, 1);
         }
+    }
+
+    if (change > 0) {
+        AudioManager.play('add');
+    } else {
+        AudioManager.play('remove');
     }
 
     renderMenuItems();
@@ -1089,6 +1098,7 @@ async function handleAddCategory() {
         return;
     }
 
+    AudioManager.play('click');
     await API.addCategory(category);
     State.categories.push(category);
     input.value = '';
@@ -1101,6 +1111,7 @@ async function handleAddCategory() {
 async function deleteCategory(category) {
     if (!confirm(`確定要刪除分類「${category}」嗎？\n注意：此分類下的餐點不會被刪除。`)) return;
 
+    AudioManager.play('error');
     await API.deleteCategory(category);
     State.categories = State.categories.filter(c => c !== category);
 
@@ -1130,6 +1141,7 @@ async function handleAddMenuItem(e) {
         enabled: true
     };
 
+    AudioManager.play('click');
     const created = await API.addMenuItem(newItem);
     State.menu.push(created);
 
@@ -1177,6 +1189,7 @@ async function handleEditMenuItem(e) {
     item.category = category;
     item.image = image;
 
+    AudioManager.play('click');
     await API.updateMenuItem(item);
 
     closeModal(DOM.editMenuModal);
@@ -1202,6 +1215,7 @@ async function deleteMenuItem(itemId) {
 
     if (!confirm(`確定要刪除餐點「${item.name}」嗎？`)) return;
 
+    AudioManager.play('error');
     await API.deleteMenuItem(itemId);
     State.menu = State.menu.filter(m => m.id !== itemId);
 
