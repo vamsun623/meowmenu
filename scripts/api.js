@@ -41,8 +41,12 @@ const API = {
                 return null;
             }
         } catch (error) {
-            console.error('API 錯誤:', error);
-            return null;
+            console.error('API 請求過程發生異常:', error);
+            // 嘗試解析錯誤原因
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                console.error('可能是 CORS 跨網域問題或 API 網址無效。');
+            }
+            return { success: false, error: error.message };
         }
     },
 
@@ -156,7 +160,7 @@ const API = {
             this.log('伺服器連線正常', result);
             return result;
         }
-        return null;
+        return result; // 回傳包含錯誤訊息的物件
     },
 
     // 比對版本並警告

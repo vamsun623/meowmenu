@@ -36,14 +36,18 @@ const SHEETS = {
 
 // 取得試算表實例 (加入容錯機制)
 function getSpreadsheet() {
-    if (typeof SPREADSHEET_ID !== 'undefined' && SPREADSHEET_ID && SPREADSHEET_ID !== '您的試算表ID') {
-        try {
+    try {
+        if (typeof SPREADSHEET_ID !== 'undefined' && SPREADSHEET_ID && SPREADSHEET_ID.length > 20 && SPREADSHEET_ID !== '您的試算表ID') {
             return SpreadsheetApp.openById(SPREADSHEET_ID);
-        } catch (e) {
-            console.error('無法開啟指定的 SPREADSHEET_ID，嘗試開啟當前活動試算表:', e);
         }
+    } catch (e) {
+        console.error('openById 失敗:', e);
     }
-    return SpreadsheetApp.getActiveSpreadsheet();
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (ss) return ss;
+
+    throw new Error('找不到試算表！如果是獨立腳本，請務必在 SPREADSHEET_ID 填入試算表 ID。');
 }
 
 // ========================================
@@ -159,7 +163,12 @@ function doPost(e) {
                 result = updateMenuOrder(data.menuIds);
                 break;
             case 'checkVersion':
-                result = { success: true, version: API_VERSION, spreadsheetName: getSpreadsheet().getName() };
+                const ss = getSpreadsheet();
+                result = {
+                    success: true,
+                    version: API_VERSION,
+                    spreadsheetName: ss ? ss.getName() : '未連結'
+                };
                 break;
             default:
                 result = { success: false, error: '未知的操作：' + action };

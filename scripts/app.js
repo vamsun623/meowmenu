@@ -372,12 +372,16 @@ async function handleLogin() {
             if (valid) {
                 statusEl.innerHTML = '✅ 連線正常';
                 statusEl.style.color = 'green';
+            } else if (info && !info.success) {
+                statusEl.innerHTML = `❌ 錯誤: ${info.error || '未知錯誤'}`;
+                statusEl.style.color = 'red';
+                console.error('[API] 伺服器回傳錯誤:', info.error);
             } else if (info) {
                 statusEl.innerHTML = `⚠️ 伺服器版本 (${info.version}) 不符！`;
                 statusEl.style.color = 'red';
                 alert('⚠️ 偵測到系統版本不符。請聯繫管理員確保 Google Scripts 已重新部署為 v' + API_VERSION);
             } else {
-                statusEl.innerHTML = '❌ 伺服器連線失敗';
+                statusEl.innerHTML = '❌ 伺服器連線失敗 (網路錯誤)';
                 statusEl.style.color = 'red';
             }
         }
