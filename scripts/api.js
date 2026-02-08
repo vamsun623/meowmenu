@@ -115,11 +115,11 @@ const API = {
 
     // 更新菜單排序
     async updateMenuOrder(menuIds) {
+        // 永遠更新本地儲存以保持同步
+        LocalStorage.updateMenuOrder(menuIds);
+
         const result = await this.request('updateMenuOrder', { menuIds });
-        if (result && result.success) {
-            return true;
-        }
-        return LocalStorage.updateMenuOrder(menuIds);
+        return result && result.success;
     },
 
     // ==================== 分類相關 ====================
@@ -153,11 +153,11 @@ const API = {
 
     // 更新分類排序
     async updateCategoryOrder(categories) {
+        // 永遠更新本地儲存以保持同步
+        LocalStorage.updateCategoryOrder(categories);
+
         const result = await this.request('updateCategoryOrder', { categories });
-        if (result && result.success) {
-            return true;
-        }
-        return LocalStorage.updateCategoryOrder(categories);
+        return result && result.success;
     }
 };
 

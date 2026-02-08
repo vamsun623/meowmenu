@@ -359,7 +359,7 @@ function updateCategoryOrder(categories) {
     // 清除原有分類 (保留標題)
     const lastRow = sheet.getLastRow();
     if (lastRow >= 2) {
-        sheet.deleteRows(2, lastRow - 1);
+        sheet.getRange(2, 1, lastRow - 1, 1).clearContent();
     }
 
     // 寫入新排序的分類
