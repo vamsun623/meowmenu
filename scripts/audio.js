@@ -6,7 +6,7 @@ const AudioManager = {
     SOUNDS: {
         success: 'https://raw.githubusercontent.com/rse/soundfx/master/soundfx.d/ui_success_01.mp3',
         error: 'https://raw.githubusercontent.com/rse/soundfx/master/soundfx.d/ui_error_01.mp3',
-        meow: 'https://raw.githubusercontent.com/rse/soundfx/master/soundfx.d/animal_cat_01.mp3'
+        meow: 'assets/sounds/meow.mp3'
     },
 
     // 緩存已載入的 Audio 物件
