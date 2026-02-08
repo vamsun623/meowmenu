@@ -56,27 +56,33 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.loginInput.value = savedName;
     }
 
-    // 自動「喵」一聲 (處理自動播放限制)
-    const triggerAutoMeow = () => {
+    // ========================================
+    // 音效解鎖器 (應對瀏覽器自動播放限制)
+    // ========================================
+    const unlockAudio = () => {
+        console.log('[Audio] 執行全域音效解鎖...');
+        AudioManager.initCtx();
         AudioManager.play('meow').then(() => {
-            console.log('[Audio] 自動播放成功');
-            cleanupListeners();
+            console.log('[Audio] 解鎖成功 & 喵聲播放');
+            removeUnlockEvents();
         }).catch(err => {
-            console.log('[Audio] 等待使用者互動以播放');
+            console.log('[Audio] 播放嘗試中... (仍需互動)', err.name);
         });
     };
 
-    const cleanupListeners = () => {
-        document.removeEventListener('click', triggerAutoMeow);
-        document.removeEventListener('keydown', triggerAutoMeow);
+    const removeUnlockEvents = () => {
+        document.removeEventListener('click', unlockAudio);
+        document.removeEventListener('keydown', unlockAudio);
+        document.removeEventListener('touchstart', unlockAudio);
     };
 
-    // 掛載降級方案
-    document.addEventListener('click', triggerAutoMeow, { once: true });
-    document.addEventListener('keydown', triggerAutoMeow, { once: true });
+    // 監聽任何互動來解鎖
+    document.addEventListener('click', unlockAudio, { once: false }); // 先不 once，直到成功
+    document.addEventListener('keydown', unlockAudio, { once: false });
+    document.addEventListener('touchstart', unlockAudio, { once: false });
 
-    // 嘗試立即播
-    triggerAutoMeow();
+    // 嘗試立即解鎖 (部分瀏覽器可能允許)
+    unlockAudio();
 });
 
 function initDOM() {
