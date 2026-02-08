@@ -19,6 +19,9 @@ const API = {
             return null;
         }
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超時
+
         try {
             const response = await fetch(CONFIG.API_URL, {
                 method: 'POST',
@@ -26,11 +29,14 @@ const API = {
                 headers: {
                     'Content-Type': 'text/plain;charset=utf-8',
                 },
-                body: JSON.stringify({ action, ...data })
+                body: JSON.stringify({ action, ...data }),
+                signal: controller.signal
             });
 
+            clearTimeout(timeoutId);
+
             if (!response.ok) {
-                throw new Error('API 請求失敗');
+                throw new Error('API 伺服器狀態異常 (' + response.status + ')');
             }
 
             const text = await response.text();
@@ -38,15 +44,20 @@ const API = {
                 return JSON.parse(text);
             } catch {
                 console.error('JSON 解析失敗:', text);
-                return null;
+                return { success: false, error: '伺服器傳回非 JSON 格式資料' };
             }
         } catch (error) {
+            clearTimeout(timeoutId);
             console.error('API 請求過程發生異常:', error);
-            // 嘗試解析錯誤原因
-            if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                console.error('可能是 CORS 跨網域問題或 API 網址無效。');
+
+            let errorMsg = error.message;
+            if (error.name === 'AbortError') {
+                errorMsg = '請求超時 (10秒)，伺服器可能正在忙碌中';
+            } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                errorMsg = '網路連線失敗或跨網域(CORS)限制';
             }
-            return { success: false, error: error.message };
+
+            return { success: false, error: errorMsg };
         }
     },
 

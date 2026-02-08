@@ -41,14 +41,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initEventListeners();
     LocalStorage.init();
 
-    // 1. 立即從本地載入資料 (樂觀載入，不等待網路)
+    // 1. 執行版本連線檢測 (最優先，攸關登入介面顯示)
+    performVersionCheck();
+
+    // 2. 立即從本地載入資料 (樂觀載入，不等待網路)
     loadLocalData();
 
-    // 2. 背景與 API 同步最新資料
+    // 3. 背景與 API 同步最新資料
     apiSyncPromise = syncDataWithAPI();
-
-    // 3. 執行版本連線檢測 (不需要等同步完成)
-    performVersionCheck();
 
     // 載入上次儲存的姓名
     const savedName = localStorage.getItem('meowmenu_username');
