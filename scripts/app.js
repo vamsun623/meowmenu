@@ -187,15 +187,30 @@ async function syncDataWithAPI() {
             API.getOrders()
         ]);
 
+        // 檢查是否真的有變化，避免不必要的渲染
+        const isMenuChanged = JSON.stringify(State.menu) !== JSON.stringify(menu);
+        const isCategoriesChanged = JSON.stringify(State.categories) !== JSON.stringify(categories);
+        const isOrdersChanged = JSON.stringify(State.orders) !== JSON.stringify(orders);
+
+        if (!isMenuChanged && !isCategoriesChanged && !isOrdersChanged) {
+            return true; // 資料無變化
+        }
+
         State.menu = menu;
         State.categories = categories;
         State.orders = orders;
 
-        // 如果已經進入應用程式頁面，則刷新 UI
+        // 如果已經進入應用程式頁面且有變動，則更新 UI
         if (State.currentUser) {
-            if (State.currentPage === 'order') renderOrderPage();
-            if (State.currentPage === 'orders') renderOrders();
-            if (State.isAdmin && State.currentPage === 'menu') renderMenuManagement();
+            if (State.currentPage === 'order' && (isMenuChanged || isCategoriesChanged)) {
+                renderOrderPage();
+            }
+            if (State.currentPage === 'orders' && isOrdersChanged) {
+                renderOrders();
+            }
+            if (State.isAdmin && State.currentPage === 'menu' && (isMenuChanged || isCategoriesChanged)) {
+                renderMenuManagement();
+            }
         }
 
         return true;

@@ -136,6 +136,9 @@ function doPost(e) {
             case 'updateCategoryOrder':
                 result = updateCategoryOrder(data.categories);
                 break;
+            case 'updateMenuOrder':
+                result = updateMenuOrder(data.menuIds);
+                break;
             default:
                 result = { success: false, error: '未知的操作' };
         }
@@ -353,20 +356,62 @@ function deleteCategory(category) {
 }
 
 function updateCategoryOrder(categories) {
+    if (!categories || !Array.isArray(categories)) return { success: false, error: '無效的分類資料' };
+
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const sheet = ss.getSheetByName(SHEETS.CATEGORIES);
 
-    // 清除原有分類 (保留標題)
-    const lastRow = sheet.getLastRow();
-    if (lastRow >= 2) {
-        sheet.getRange(2, 1, lastRow - 1, 1).clearContent();
+    // 強制清除 A2 之後的所有內容，確保不會留下殘餘資料
+    const maxRows = sheet.getMaxRows();
+    if (maxRows >= 2) {
+        sheet.getRange(2, 1, maxRows - 1, 1).clearContent();
     }
 
-    // 寫入新排序的分類
-    const rows = categories.map(c => [c]);
-    if (rows.length > 0) {
+    // 寫入新排序的分類 (從第二行開始)
+    const validCategories = categories.filter(c => c && String(c).trim() !== '');
+    if (validCategories.length > 0) {
+        const rows = validCategories.map(c => [String(c).trim()]);
         sheet.getRange(2, 1, rows.length, 1).setValues(rows);
     }
 
-    return { success: true };
+    return { success: true, count: validCategories.length };
+}
+
+function updateMenuOrder(menuIds) {
+    if (!menuIds || !Array.isArray(menuIds)) return { success: false, error: '無效的菜單排序資料' };
+
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheetByName(SHEETS.MENU);
+    const lastRow = sheet.getLastRow();
+
+    if (lastRow < 2) return { success: true, message: '菜單為空，無需排序' };
+
+    // 讀取目前所有菜單資料
+    const data = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+    const menuMap = {};
+    data.forEach(row => {
+        const id = row[0];
+        if (id) menuMap[id] = row;
+    });
+
+    // 根據傳入的 ID 順序重新排列
+    const sortedRows = [];
+    menuIds.forEach(id => {
+        if (menuMap[id]) {
+            sortedRows.push(menuMap[id]);
+            delete menuMap[id]; // 標記已處理
+        }
+    });
+
+    // 如果還有不在傳入名單中的項目 (保險起見)，也放回後面
+    Object.values(menuMap).forEach(row => sortedRows.push(row));
+
+    if (sortedRows.length > 0) {
+        // 先清空原本區域
+        sheet.getRange(2, 1, lastRow - 1, 6).clearContent();
+        // 寫入新排序
+        sheet.getRange(2, 1, sortedRows.length, 6).setValues(sortedRows);
+    }
+
+    return { success: true, count: sortedRows.length };
 }

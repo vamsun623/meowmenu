@@ -42,36 +42,40 @@ const API = {
         }
     },
 
+    // 紀錄日誌到控制台
+    log(message, data) {
+        console.log(`[API] ${message}`, data || '');
+    },
+
     // ==================== 訂單相關 ====================
 
     // 取得所有訂單
     async getOrders() {
         const result = await this.request('getOrders');
         if (result && result.success) {
+            // 同步到本地儲存
+            localStorage.setItem(LocalStorage.KEYS.ORDERS, JSON.stringify(result.data));
             return result.data;
         }
-        // 如果 API 失敗，返回本地儲存的訂單
         return LocalStorage.getOrders();
     },
 
     // 新增訂單
     async createOrder(order) {
+        // 先更新本地以確保即時性
+        LocalStorage.saveOrder(order);
+
         const result = await this.request('createOrder', { order });
-        if (result && result.success) {
-            return result.data;
-        }
-        // 如果 API 失敗，儲存到本地
-        return LocalStorage.saveOrder(order);
+        return result && result.success ? result.data : order;
     },
 
     // 更新訂單狀態
     async updateOrderStatus(orderId, status) {
+        // 先更新本地
+        LocalStorage.updateOrderStatus(orderId, status);
+
         const result = await this.request('updateOrderStatus', { orderId, status });
-        if (result && result.success) {
-            return true;
-        }
-        // 如果 API 失敗，更新本地
-        return LocalStorage.updateOrderStatus(orderId, status);
+        return result && result.success;
     },
 
     // ==================== 菜單相關 ====================
@@ -80,45 +84,48 @@ const API = {
     async getMenu() {
         const result = await this.request('getMenu');
         if (result && result.success) {
+            // 同步到本地儲存
+            localStorage.setItem(LocalStorage.KEYS.MENU, JSON.stringify(result.data));
             return result.data;
         }
-        // 如果 API 失敗，返回本地菜單
         return LocalStorage.getMenu();
     },
 
     // 新增菜單項目
     async addMenuItem(item) {
-        const result = await this.request('addMenuItem', { item });
-        if (result && result.success) {
-            return result.data;
-        }
-        return LocalStorage.addMenuItem(item);
+        // 先更新本地
+        const localItem = LocalStorage.addMenuItem(item);
+
+        const result = await this.request('addMenuItem', { item: localItem });
+        return result && result.success ? result.data : localItem;
     },
 
     // 更新菜單項目
     async updateMenuItem(item) {
+        // 先更新本地
+        LocalStorage.updateMenuItem(item);
+
         const result = await this.request('updateMenuItem', { item });
-        if (result && result.success) {
-            return true;
-        }
-        return LocalStorage.updateMenuItem(item);
+        return result && result.success;
     },
 
     // 刪除菜單項目
     async deleteMenuItem(itemId) {
+        // 先更新本地
+        LocalStorage.deleteMenuItem(itemId);
+
         const result = await this.request('deleteMenuItem', { itemId });
-        if (result && result.success) {
-            return true;
-        }
-        return LocalStorage.deleteMenuItem(itemId);
+        return result && result.success;
     },
 
     // 更新菜單排序
     async updateMenuOrder(menuIds) {
-        // 永遠更新本地儲存以保持同步
+        this.log('更新菜單排序', menuIds);
+        // 永遠先更新本地儲存以保持同步
         LocalStorage.updateMenuOrder(menuIds);
 
         const result = await this.request('updateMenuOrder', { menuIds });
+        this.log('更新菜單排序結果', result);
         return result && result.success;
     },
 
@@ -128,6 +135,8 @@ const API = {
     async getCategories() {
         const result = await this.request('getCategories');
         if (result && result.success) {
+            // 同步到本地儲存
+            localStorage.setItem(LocalStorage.KEYS.CATEGORIES, JSON.stringify(result.data));
             return result.data;
         }
         return LocalStorage.getCategories();
@@ -135,28 +144,30 @@ const API = {
 
     // 新增分類
     async addCategory(category) {
+        // 先更新本地
+        LocalStorage.addCategory(category);
+
         const result = await this.request('addCategory', { category });
-        if (result && result.success) {
-            return true;
-        }
-        return LocalStorage.addCategory(category);
+        return result && result.success;
     },
 
     // 刪除分類
     async deleteCategory(category) {
+        // 先更新本地
+        LocalStorage.deleteCategory(category);
+
         const result = await this.request('deleteCategory', { category });
-        if (result && result.success) {
-            return true;
-        }
-        return LocalStorage.deleteCategory(category);
+        return result && result.success;
     },
 
     // 更新分類排序
     async updateCategoryOrder(categories) {
-        // 永遠更新本地儲存以保持同步
+        this.log('更新分類排序', categories);
+        // 永遠先更新本地儲存以保持同步
         LocalStorage.updateCategoryOrder(categories);
 
         const result = await this.request('updateCategoryOrder', { categories });
+        this.log('更新分類排序結果', result);
         return result && result.success;
     }
 };
