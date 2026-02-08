@@ -660,6 +660,7 @@ async function handleCheckout(e) {
         closeModal(DOM.checkoutModal);
 
         // 顯示成功訊息
+        AudioManager.play('success');
         showSuccessMessage('🎉 點餐成功！', `您的訂單 ${order.id} 已成立，請於 ${order.pickupTime} 前來取餐！`);
     } finally {
         // 恢復狀態
@@ -821,6 +822,7 @@ async function cancelMyOrder(orderId) {
     // 樂觀更新：立即更新 UI
     order.status = 'cancelled';
     renderOrders();
+    AudioManager.play('error');
     showSuccessMessage('❌', '您的訂單已取消！');
 
     // 背景同步到 API
