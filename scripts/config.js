@@ -5,7 +5,7 @@
 const CONFIG = {
   // Google Apps Script Web App URL
   // 部署後請將此處替換為您的 Web App URL
-  API_URL: 'https://script.google.com/macros/s/AKfycbwzIK0SY4hDiFvpvVyE25W50XD9JAsgvkFLtOpaLTEoOOHL7xOk8loUiSYkig62hQyt/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbzC2IpQbWWcB1yRLuQXVtz5JU1ZVU0-44QuUFlDJJo1IGY6s7Nws4xaXbED4bTp9nCs/exec',
 
   // 特權使用者名單
   ADMIN_USERS: ['喵喵店長', '豬豬店長'],
