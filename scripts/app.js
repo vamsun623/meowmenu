@@ -47,6 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. 背景與 API 同步最新資料
     apiSyncPromise = syncDataWithAPI();
 
+    // 3. 執行版本連線檢測 (不需要等同步完成)
+    performVersionCheck();
+
     // 載入上次儲存的姓名
     const savedName = localStorage.getItem('meowmenu_username');
     if (savedName) {
@@ -364,30 +367,30 @@ async function handleLogin() {
     if (State.isAdmin) {
         renderMenuManagement();
     }
+}
 
-    // 檢查 API 版本同步與診斷資訊
+// 執行系統版本與連線檢測
+function performVersionCheck() {
     API.validateVersion().then(({ valid, info }) => {
         const statusEl = document.getElementById('versionStatus');
         if (statusEl) {
+            statusEl.classList.remove('loading-text');
             if (valid) {
                 statusEl.innerHTML = '✅ 連線正常';
                 statusEl.style.color = 'green';
             } else if (info && !info.success) {
                 statusEl.innerHTML = `❌ 錯誤: ${info.error || '未知錯誤'}`;
                 statusEl.style.color = 'red';
-                console.error('[API] 伺服器回傳錯誤:', info.error);
             } else if (info) {
-                statusEl.innerHTML = `⚠️ 伺服器版本 (${info.version}) 不符！`;
-                statusEl.style.color = 'red';
+                statusEl.innerHTML = `⚠️ 版本 (${info.version}) 不符`;
+                statusEl.style.color = 'orange';
                 alert('⚠️ 偵測到系統版本不符。請聯繫管理員確保 Google Scripts 已重新部署為 v' + API_VERSION);
             } else {
-                statusEl.innerHTML = '❌ 伺服器連線失敗 (網路錯誤)';
+                statusEl.innerHTML = '❌ 伺服器連線失敗';
                 statusEl.style.color = 'red';
             }
         }
     });
-
-    // 如果 API 同步還在跑，它完成後會自動更新 UI
 }
 
 function showLoginError(message) {

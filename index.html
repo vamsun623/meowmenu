@@ -30,6 +30,12 @@
       <button id="loginBtn" class="login-btn">
         🍳 開始點餐
       </button>
+
+      <!-- 系統版本與連線診斷 -->
+      <div class="login-version-footer">
+        系統版本: <span id="systemVersion">1.0.2</span>
+        <span id="versionStatus" class="loading-text">正在確認連線...</span>
+      </div>
     </div>
   </div>
 
@@ -115,20 +121,6 @@
         菜單管理
       </h2>
 
-      <!-- 管理工具 -->
-      <div class="admin-diagnostic-tools"
-        style="margin-bottom: var(--spacing-lg); padding: var(--spacing-md); background: rgba(0,0,0,0.05); border-radius: var(--radius-md); display: flex; align-items: center; gap: var(--spacing-md); justify-content: space-between;">
-        <div style="font-size: 14px; color: var(--text-secondary);">
-          系統版本: <span id="systemVersion">1.0.2</span>
-          <span id="versionStatus" style="margin-left: 10px;"></span>
-        </div>
-        <div style="display: flex; gap: var(--spacing-md);">
-          <button class="btn btn-secondary" style="font-size: 12px; padding: 4px 12px;"
-            onclick="syncDataWithAPI().then(() => showSuccessMessage('🔄', '資料同步完成！'))">強制同步伺服器</button>
-          <button class="btn btn-danger" style="font-size: 12px; padding: 4px 12px;"
-            onclick="localStorage.clear(); location.reload();">清除本地快取並登出</button>
-        </div>
-      </div>
 
       <div class="menu-management">
         <!-- 分類管理 -->
