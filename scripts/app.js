@@ -57,19 +57,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 自動「喵」一聲 (處理自動播放限制)
-    const autoMeow = () => {
-        AudioManager.play('meow');
-        document.removeEventListener('click', autoMeow);
-        document.removeEventListener('keydown', autoMeow);
+    const triggerAutoMeow = () => {
+        AudioManager.play('meow').then(() => {
+            console.log('[Audio] 自動播放成功');
+            cleanupListeners();
+        }).catch(err => {
+            console.log('[Audio] 等待使用者互動以播放');
+        });
     };
 
-    // 嘗試直接播，如果被擋就掛監聽器
-    try {
-        AudioManager.play('meow');
-    } catch (e) {
-        document.addEventListener('click', autoMeow);
-        document.addEventListener('keydown', autoMeow);
-    }
+    const cleanupListeners = () => {
+        document.removeEventListener('click', triggerAutoMeow);
+        document.removeEventListener('keydown', triggerAutoMeow);
+    };
+
+    // 掛載降級方案
+    document.addEventListener('click', triggerAutoMeow, { once: true });
+    document.addEventListener('keydown', triggerAutoMeow, { once: true });
+
+    // 嘗試立即播
+    triggerAutoMeow();
 });
 
 function initDOM() {

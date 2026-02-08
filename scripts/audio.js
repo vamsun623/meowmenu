@@ -6,7 +6,7 @@ const AudioManager = {
     SOUNDS: {
         success: 'https://raw.githubusercontent.com/rse/soundfx/master/soundfx.d/ui_success_01.mp3',
         error: 'https://raw.githubusercontent.com/rse/soundfx/master/soundfx.d/ui_error_01.mp3',
-        meow: 'https://raw.githubusercontent.com/the-muda-project/muda/master/assets/audio/meow.mp3'
+        meow: 'https://raw.githubusercontent.com/rse/soundfx/master/soundfx.d/animal_cat_01.mp3'
     },
 
     // 緩存已載入的 Audio 物件
@@ -70,36 +70,49 @@ const AudioManager = {
 
     // 播放音效
     play(type, volume = 0.5) {
-        // click, add, remove 使用合成音效以確保穩定
-        if (['click', 'add', 'remove'].includes(type)) {
-            this.playSynthetic(type);
-            return;
-        }
-
-        try {
-            const url = this.SOUNDS[type];
-            if (!url) return;
-
-            // 實例化或從緩存取得
-            let audio = this.cache[type];
-            if (!audio) {
-                audio = new Audio(url);
-                audio.crossOrigin = "anonymous"; // 嘗試處理 CORS
-                this.cache[type] = audio;
+        return new Promise((resolve, reject) => {
+            // click, add, remove 使用合成音效以確保穩定
+            if (['click', 'add', 'remove'].includes(type)) {
+                try {
+                    this.playSynthetic(type);
+                    resolve();
+                } catch (e) {
+                    reject(e);
+                }
+                return;
             }
 
-            // 重設並播放
-            audio.currentTime = 0;
-            audio.volume = volume;
+            try {
+                const url = this.SOUNDS[type];
+                if (!url) {
+                    resolve();
+                    return;
+                }
 
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.warn(`[Audio] 播放 ${type} 失敗 (可能受瀏覽器限制):`, error);
-                });
+                // 實例化或從緩存取得
+                let audio = this.cache[type];
+                if (!audio) {
+                    audio = new Audio();
+                    audio.crossOrigin = "anonymous";
+                    audio.src = url;
+                    audio.preload = "auto";
+                    this.cache[type] = audio;
+                }
+
+                // 重設並播放
+                audio.currentTime = 0;
+                audio.volume = volume;
+
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(resolve).catch(reject);
+                } else {
+                    resolve();
+                }
+            } catch (err) {
+                console.error('[Audio] 播放器異常:', err);
+                reject(err);
             }
-        } catch (err) {
-            console.error('[Audio] 播放器異常:', err);
-        }
+        });
     }
 };
