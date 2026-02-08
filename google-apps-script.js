@@ -133,6 +133,9 @@ function doPost(e) {
             case 'deleteCategory':
                 result = deleteCategory(data.category);
                 break;
+            case 'updateCategoryOrder':
+                result = updateCategoryOrder(data.categories);
+                break;
             default:
                 result = { success: false, error: '未知的操作' };
         }
@@ -347,4 +350,23 @@ function deleteCategory(category) {
     }
 
     return { success: false, error: '找不到分類' };
+}
+
+function updateCategoryOrder(categories) {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheetByName(SHEETS.CATEGORIES);
+
+    // 清除原有分類 (保留標題)
+    const lastRow = sheet.getLastRow();
+    if (lastRow >= 2) {
+        sheet.deleteRows(2, lastRow - 1);
+    }
+
+    // 寫入新排序的分類
+    const rows = categories.map(c => [c]);
+    if (rows.length > 0) {
+        sheet.getRange(2, 1, rows.length, 1).setValues(rows);
+    }
+
+    return { success: true };
 }

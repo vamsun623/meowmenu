@@ -149,6 +149,15 @@ const API = {
             return true;
         }
         return LocalStorage.deleteCategory(category);
+    },
+
+    // 更新分類排序
+    async updateCategoryOrder(categories) {
+        const result = await this.request('updateCategoryOrder', { categories });
+        if (result && result.success) {
+            return true;
+        }
+        return LocalStorage.updateCategoryOrder(categories);
     }
 };
 
@@ -262,6 +271,11 @@ const LocalStorage = {
         const categories = this.getCategories();
         const filtered = categories.filter(c => c !== category);
         localStorage.setItem(this.KEYS.CATEGORIES, JSON.stringify(filtered));
+        return true;
+    },
+
+    updateCategoryOrder(categories) {
+        localStorage.setItem(this.KEYS.CATEGORIES, JSON.stringify(categories));
         return true;
     }
 };

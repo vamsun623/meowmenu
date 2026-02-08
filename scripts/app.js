@@ -792,12 +792,15 @@ async function renderMenuManagement() {
 }
 
 function renderCategoriesManagement() {
-    DOM.categoriesList.innerHTML = State.categories.map(cat => `
-    <span class="category-tag">
+    DOM.categoriesList.innerHTML = State.categories.map((cat, index) => `
+    <span class="category-tag" draggable="true" data-index="${index}">
+      <span class="drag-handle">☰</span>
       ${getCategoryEmoji(cat)} ${cat}
-      <button class="category-tag-remove" onclick="deleteCategory('${cat}')">✕</button>
+      <button class="category-tag-remove" onclick="event.stopPropagation(); deleteCategory('${cat}')">✕</button>
     </span>
   `).join('');
+
+    initCategoryDragAndDrop();
 }
 
 function renderCategorySelects() {
@@ -897,6 +900,72 @@ function initMobileDragAndDrop() {
         card.addEventListener('dragleave', handleDragLeave);
         card.addEventListener('drop', handleDrop);
     });
+}
+
+// 分類拖曳
+function initCategoryDragAndDrop() {
+    const tags = DOM.categoriesList.querySelectorAll('.category-tag');
+
+    tags.forEach(tag => {
+        tag.addEventListener('dragstart', handleCategoryDragStart);
+        tag.addEventListener('dragend', handleCategoryDragEnd);
+        tag.addEventListener('dragover', handleCategoryDragOver);
+        tag.addEventListener('dragenter', handleCategoryDragEnter);
+        tag.addEventListener('dragleave', handleCategoryDragLeave);
+        tag.addEventListener('drop', handleCategoryDrop);
+    });
+}
+
+function handleCategoryDragStart(e) {
+    draggedItem = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', this.dataset.index);
+}
+
+function handleCategoryDragEnd(e) {
+    this.classList.remove('dragging');
+    DOM.categoriesList.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+}
+
+function handleCategoryDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function handleCategoryDragEnter(e) {
+    e.preventDefault();
+    if (this !== draggedItem) {
+        this.classList.add('drag-over');
+    }
+}
+
+function handleCategoryDragLeave(e) {
+    this.classList.remove('drag-over');
+}
+
+async function handleCategoryDrop(e) {
+    e.preventDefault();
+    this.classList.remove('drag-over');
+
+    if (this === draggedItem) return;
+
+    const fromIndex = parseInt(draggedItem.dataset.index);
+    const toIndex = parseInt(this.dataset.index);
+
+    // 重新排序分類
+    const cat = State.categories.splice(fromIndex, 1)[0];
+    State.categories.splice(toIndex, 0, cat);
+
+    // 更新排序到 API
+    await API.updateCategoryOrder(State.categories);
+
+    // 重新渲染相關 UI
+    renderCategoriesManagement();
+    renderCategorySelects();
+    renderCategoryTabs();
+
+    showSuccessMessage('✅', '分類順序已更新！');
 }
 
 function handleDragStart(e) {
