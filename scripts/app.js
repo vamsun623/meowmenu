@@ -193,7 +193,14 @@ async function syncDataWithAPI() {
         const isOrdersChanged = JSON.stringify(State.orders) !== JSON.stringify(orders);
 
         if (!isMenuChanged && !isCategoriesChanged && !isOrdersChanged) {
+            console.log('[Sync] 無資料變化，略過更新');
             return true; // 資料無變化
+        }
+
+        console.log('[Sync] 偵測到資料變化:', { isMenuChanged, isCategoriesChanged, isOrdersChanged });
+
+        if (isCategoriesChanged) {
+            console.log('[Sync] 分類順序變化:', { old: State.categories, new: categories });
         }
 
         State.menu = menu;
@@ -357,6 +364,13 @@ async function handleLogin() {
     if (State.isAdmin) {
         renderMenuManagement();
     }
+
+    // 檢查 API 版本同步
+    API.validateVersion().then(isValid => {
+        if (!isValid) {
+            alert('⚠️ 偵測到系統更新，部分功能可能無法正常運作。請聯繫管理員確保 Google Scripts 已重新部署至最新版本！');
+        }
+    });
 
     // 如果 API 同步還在跑，它完成後會自動更新 UI
 }

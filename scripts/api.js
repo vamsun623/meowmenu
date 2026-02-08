@@ -1,8 +1,12 @@
-// ========================================
 // 喵喵豬豬早餐店 - API 串接模組
 // ========================================
 
+const API_VERSION = '1.0.2'; // 與 GAS 版本對應
+
 const API = {
+    // 追蹤是否有正在進行的更新動作
+    pendingUpdates: new Set(),
+
     // 檢查 API 是否可用
     isAvailable() {
         return CONFIG.API_URL && CONFIG.API_URL.length > 0;
@@ -131,15 +135,37 @@ const API = {
 
     // ==================== 分類相關 ====================
 
-    // 取得分類
+    // 取得所有分類
     async getCategories() {
         const result = await this.request('getCategories');
         if (result && result.success) {
-            // 同步到本地儲存
-            localStorage.setItem(LocalStorage.KEYS.CATEGORIES, JSON.stringify(result.data));
+            // 如果目前沒有正在進行的排序更新，才同步到本地儲存
+            if (!this.pendingUpdates.has('updateCategoryOrder')) {
+                this.log('同步伺服器分類到本地', result.data);
+                localStorage.setItem(LocalStorage.KEYS.CATEGORIES, JSON.stringify(result.data));
+            }
             return result.data;
         }
         return LocalStorage.getCategories();
+    },
+
+    // 檢查伺服器版本
+    async checkVersion() {
+        const result = await this.request('checkVersion');
+        if (result && result.success) {
+            return result.version;
+        }
+        return null;
+    },
+
+    // 比對版本並警告
+    async validateVersion() {
+        const serverVersion = await this.checkVersion();
+        if (serverVersion && serverVersion !== API_VERSION) {
+            console.warn(`[API] 版本不符！前端: ${API_VERSION}, 伺服器: ${serverVersion}。請重新部署 GAS！`);
+            return false;
+        }
+        return true;
     },
 
     // 新增分類
@@ -163,12 +189,19 @@ const API = {
     // 更新分類排序
     async updateCategoryOrder(categories) {
         this.log('更新分類排序', categories);
+        this.pendingUpdates.add('updateCategoryOrder');
+
         // 永遠先更新本地儲存以保持同步
         LocalStorage.updateCategoryOrder(categories);
 
-        const result = await this.request('updateCategoryOrder', { categories });
-        this.log('更新分類排序結果', result);
-        return result && result.success;
+        try {
+            const result = await this.request('updateCategoryOrder', { categories });
+            this.log('更新分類排序結果', result);
+            return result && result.success;
+        } finally {
+            // 延遲一點點再移除 pending，確保其他 sync 動作不會太快插進來
+            setTimeout(() => this.pendingUpdates.delete('updateCategoryOrder'), 1000);
+        }
     }
 };
 

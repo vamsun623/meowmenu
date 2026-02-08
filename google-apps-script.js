@@ -20,6 +20,9 @@
 // 試算表 ID 可從網址取得：https://docs.google.com/spreadsheets/d/[這裡是ID]/edit
 const SPREADSHEET_ID = '您的試算表ID';
 
+// API 版本 (用於偵測部署是否成功)
+const API_VERSION = '1.0.2';
+
 // 試算表名稱
 const SHEETS = {
     ORDERS: '訂單',
@@ -133,14 +136,14 @@ function doPost(e) {
             case 'deleteCategory':
                 result = deleteCategory(data.category);
                 break;
-            case 'updateCategoryOrder':
-                result = updateCategoryOrder(data.categories);
-                break;
             case 'updateMenuOrder':
                 result = updateMenuOrder(data.menuIds);
                 break;
+            case 'checkVersion':
+                result = { success: true, version: API_VERSION };
+                break;
             default:
-                result = { success: false, error: '未知的操作' };
+                result = { success: false, error: '未知的操作：' + action };
         }
 
         return ContentService
@@ -356,25 +359,37 @@ function deleteCategory(category) {
 }
 
 function updateCategoryOrder(categories) {
-    if (!categories || !Array.isArray(categories)) return { success: false, error: '無效的分類資料' };
+    try {
+        if (!categories || !Array.isArray(categories)) {
+            return { success: false, error: '無效的分類資料' };
+        }
 
-    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const sheet = ss.getSheetByName(SHEETS.CATEGORIES);
+        const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+        const sheet = ss.getSheetByName(SHEETS.CATEGORIES);
 
-    // 強制清除 A2 之後的所有內容，確保不會留下殘餘資料
-    const maxRows = sheet.getMaxRows();
-    if (maxRows >= 2) {
-        sheet.getRange(2, 1, maxRows - 1, 1).clearContent();
+        // 強制清除 A 欄 A2 之後的所有內容
+        const lastRow = sheet.getLastRow();
+        if (lastRow >= 2) {
+            sheet.getRange(2, 1, lastRow - 1, 1).clear();
+        }
+
+        // 過濾有效分類並寫入
+        const validCategories = categories
+            .map(c => String(c || '').trim())
+            .filter(c => c !== '');
+
+        if (validCategories.length > 0) {
+            const rows = validCategories.map(c => [c]);
+            sheet.getRange(2, 1, rows.length, 1).setValues(rows);
+        }
+
+        // 刷新試算表快取，確保下次讀取是最新的
+        SpreadsheetApp.flush();
+
+        return { success: true, count: validCategories.length, version: API_VERSION };
+    } catch (e) {
+        return { success: false, error: '發生異常: ' + e.toString() };
     }
-
-    // 寫入新排序的分類 (從第二行開始)
-    const validCategories = categories.filter(c => c && String(c).trim() !== '');
-    if (validCategories.length > 0) {
-        const rows = validCategories.map(c => [String(c).trim()]);
-        sheet.getRange(2, 1, rows.length, 1).setValues(rows);
-    }
-
-    return { success: true, count: validCategories.length };
 }
 
 function updateMenuOrder(menuIds) {
