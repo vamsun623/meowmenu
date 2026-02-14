@@ -8,7 +8,7 @@ const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzC2IpQbWWcB1yRLuQXVtz5JU1ZVU0-44QuUFlDJJo1IGY6s7Nws4xaXbED4bTp9nCs/exec',
 
   // 特權使用者名單
-  ADMIN_USERS: ['喵喵店長', '豬豬店長'],
+  ADMIN_USERS: ['喵喵店長', '0422'],
 
   // 預設餐點分類
   DEFAULT_CATEGORIES: ['蛋餅', '鬆餅', '飲料'],
