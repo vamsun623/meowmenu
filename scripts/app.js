@@ -16,7 +16,8 @@ const State = {
     orderFilter: 'pending',
     isSubmitting: false,  // 防止重複送出
     processingOrders: new Set(),  // 正在處理的訂單 ID
-    isSyncDone: false  // API 同步是否已完成
+    isSyncDone: false,  // API 同步是否已完成
+    wasCartOpen: false  // 記錄結帳前購物車是否開啟
 };
 
 // DOM 元素快取
@@ -747,6 +748,10 @@ function renderCart() {
 function showCheckoutModal() {
     if (State.cart.length === 0) return;
 
+    // 紀錄購物車狀態並關閉手機版購物車，以避免遮罩/選單層級問題
+    State.wasCartOpen = DOM.cartSection && DOM.cartSection.classList.contains('open');
+    closeMobileCart();
+
     // 生成時間選項
     const hourSelect = document.getElementById('pickupHour');
     const minuteSelect = document.getElementById('pickupMinute');
@@ -818,6 +823,7 @@ async function handleCheckout(e) {
 
         // 關閉結帳視窗
         closeModal(DOM.checkoutModal);
+        State.wasCartOpen = false;
 
         // 顯示成功訊息
         AudioManager.play('success');
@@ -1427,4 +1433,8 @@ function closeEditModal() {
 function closeCheckoutModal() {
     AudioManager.play('click');
     closeModal(DOM.checkoutModal);
+    if (State.wasCartOpen) {
+        openMobileCart();
+        State.wasCartOpen = false;
+    }
 }
