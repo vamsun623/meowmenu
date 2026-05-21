@@ -725,13 +725,17 @@ function renderCart() {
 
     DOM.cartItems.innerHTML = State.cart.map(item => `
     <div class="cart-item">
-      <div>
+      <div class="cart-item-left">
         <span class="cart-item-name">${item.name}</span>
-        <span class="cart-item-qty">x${item.quantity}</span>
+        <div class="cart-item-qty-control">
+          <button class="cart-qty-btn minus" onclick="updateCart(${item.id}, -1)">-</button>
+          <span class="cart-qty-display">${item.quantity}</span>
+          <button class="cart-qty-btn plus" onclick="updateCart(${item.id}, 1)">+</button>
+        </div>
       </div>
-      <div>
+      <div class="cart-item-right">
         <span class="cart-item-price">$${item.price * item.quantity}</span>
-        <button class="cart-item-remove" onclick="removeFromCart(${item.id})">✕</button>
+        <button class="cart-item-remove" onclick="removeFromCart(${item.id})" title="刪除此品項">✕</button>
       </div>
     </div>
   `).join('');
