@@ -18,7 +18,7 @@
 
 // 請修改為您的 Google 試算表 ID
 // 試算表 ID 可從網址取得：https://docs.google.com/spreadsheets/d/[這裡是ID]/edit
-const SPREADSHEET_ID = '您的試算表ID';
+const SPREADSHEET_ID = '1RrPD0R_4r7XvOf8QdebC5zsu8Wudz-dniZhZj6KF0OQ';
 
 // API 版本 (用於偵測部署是否成功)
 const API_VERSION = '1.0.2';
