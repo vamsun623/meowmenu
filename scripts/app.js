@@ -826,7 +826,8 @@ async function handleCheckout(e) {
         State.wasCartOpen = false;
 
         // 顯示成功訊息
-        AudioManager.play('success');
+        AudioManager.play('meow');
+        setTimeout(() => AudioManager.play('success'), 200);
         showSuccessMessage('🎉 點餐成功！', `您的訂單 ${order.id} 已成立，請於 ${order.pickupTime} 前來取餐！`);
     } finally {
         // 恢復狀態
