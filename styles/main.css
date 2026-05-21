@@ -1970,3 +1970,104 @@ body {
     border: 2px solid white;
   }
 }
+
+/* ========================================
+   骨架螢幕 (Skeleton Screen) 載入樣式
+   ======================================== */
+.skeleton {
+  pointer-events: none !important;
+  background: var(--card-bg) !important;
+  border-color: rgba(0, 0, 0, 0.05) !important;
+  box-shadow: none !important;
+}
+
+.skeleton-image {
+  background: #e2e8f0;
+  position: relative;
+  overflow: hidden;
+  height: 120px; /* 與原圖高度一致 */
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.skeleton-text {
+  height: 16px;
+  background: #e2e8f0;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-text.short {
+  width: 50%;
+}
+
+.skeleton-controls {
+  height: 32px;
+  background: #e2e8f0;
+  border-radius: var(--radius-md);
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  margin-top: var(--spacing-sm);
+}
+
+.skeleton-tab {
+  width: 90px;
+  height: 36px;
+  background: #e2e8f0;
+  border-radius: var(--radius-full);
+  display: inline-block;
+  margin: var(--spacing-xs);
+  position: relative;
+  overflow: hidden;
+  border: none !important;
+}
+
+/* 呼吸燈與閃爍動畫 */
+@keyframes skeleton-loading {
+  0% {
+    background-color: #f1f5f9;
+  }
+  50% {
+    background-color: #e2e8f0;
+  }
+  100% {
+    background-color: #f1f5f9;
+  }
+}
+
+.skeleton-image,
+.skeleton-text,
+.skeleton-controls,
+.skeleton-tab {
+  animation: skeleton-loading 1.5s infinite ease-in-out;
+}
+
+/* 微光的 CSS 漸變移動效果 */
+.skeleton-image::after,
+.skeleton-text::after,
+.skeleton-controls::after,
+.skeleton-tab::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 20%,
+    rgba(255, 255, 255, 0.6) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 1.8s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}

@@ -15,7 +15,8 @@ const State = {
     selectedCategory: 'all',
     orderFilter: 'pending',
     isSubmitting: false,  // 防止重複送出
-    processingOrders: new Set()  // 正在處理的訂單 ID
+    processingOrders: new Set(),  // 正在處理的訂單 ID
+    isSyncDone: false  // API 同步是否已完成
 };
 
 // DOM 元素快取
@@ -317,30 +318,19 @@ async function syncDataWithAPI() {
         const isCategoriesChanged = JSON.stringify(State.categories) !== JSON.stringify(categories);
         const isOrdersChanged = JSON.stringify(State.orders) !== JSON.stringify(orders);
 
-        if (!isMenuChanged && !isCategoriesChanged && !isOrdersChanged) {
-            console.log('[Sync] 無資料變化，略過更新');
-            return true; // 資料無變化
-        }
-
-        console.log('[Sync] 偵測到資料變化:', { isMenuChanged, isCategoriesChanged, isOrdersChanged });
-
-        if (isCategoriesChanged) {
-            console.log('[Sync] 分類順序變化:', { old: State.categories, new: categories });
-        }
-
         State.menu = menu;
         State.categories = categories;
         State.orders = orders;
 
-        // 如果已經進入應用程式頁面且有變動，則更新 UI
+        // 如果已經進入應用程式頁面且有變動，則更新 UI (若是骨架螢幕狀態也予以渲染)
         if (State.currentUser) {
-            if (State.currentPage === 'order' && (isMenuChanged || isCategoriesChanged)) {
+            if (State.currentPage === 'order') {
                 renderOrderPage();
             }
-            if (State.currentPage === 'orders' && isOrdersChanged) {
+            if (State.currentPage === 'orders' && (isOrdersChanged || !State.isSyncDone)) {
                 renderOrders();
             }
-            if (State.isAdmin && State.currentPage === 'menu' && (isMenuChanged || isCategoriesChanged)) {
+            if (State.isAdmin && State.currentPage === 'menu') {
                 renderMenuManagement();
             }
         }
@@ -349,6 +339,12 @@ async function syncDataWithAPI() {
     } catch (error) {
         console.error('API 同步失敗:', error);
         return false;
+    } finally {
+        State.isSyncDone = true;
+        // 同步完成後重新整理今日點餐頁面以清除骨架螢幕 (若無資料)
+        if (State.currentUser && State.currentPage === 'order') {
+            renderOrderPage();
+        }
     }
 }
 
@@ -569,6 +565,10 @@ function renderOrderPage() {
 }
 
 function renderCategoryTabs() {
+    if (State.categories.length === 0 && !State.isSyncDone) {
+        renderCategoryTabsSkeletons();
+        return;
+    }
     const allCategories = ['all', ...State.categories];
 
     DOM.categoryTabs.innerHTML = allCategories.map(cat => `
@@ -589,6 +589,20 @@ function getCategoryEmoji(category) {
 }
 
 function renderMenuItems() {
+    if (State.menu.length === 0) {
+        if (!State.isSyncDone) {
+            renderSkeletons();
+        } else {
+            DOM.menuGrid.innerHTML = `
+          <div class="orders-empty" style="grid-column: 1/-1;">
+            <div class="orders-empty-icon">🍽️</div>
+            <p>目前沒有餐點</p>
+          </div>
+        `;
+        }
+        return;
+    }
+
     const filteredMenu = State.menu.filter(item => {
         if (!item.enabled) return false;
         if (State.selectedCategory === 'all') return true;
@@ -625,6 +639,25 @@ function renderMenuItems() {
       </div>
     `;
     }).join('');
+}
+
+function renderSkeletons() {
+    DOM.menuGrid.innerHTML = Array(6).fill(0).map(() => `
+      <div class="menu-item skeleton">
+        <div class="menu-item-image skeleton-image"></div>
+        <div class="menu-item-info">
+          <div class="menu-item-name skeleton-text"></div>
+          <div class="menu-item-price skeleton-text short"></div>
+          <div class="menu-item-controls skeleton-controls"></div>
+        </div>
+      </div>
+    `).join('');
+}
+
+function renderCategoryTabsSkeletons() {
+    DOM.categoryTabs.innerHTML = Array(4).fill(0).map(() => `
+      <div class="category-tab skeleton skeleton-tab"></div>
+    `).join('');
 }
 
 function getItemImageHtml(image) {
