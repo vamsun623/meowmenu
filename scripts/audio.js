@@ -2,6 +2,17 @@
 // ========================================
 
 const AudioManager = {
+    // 靜音狀態，預設從 localStorage 讀取
+    isMuted: localStorage.getItem('meowmenu_muted') === 'true',
+
+    // 切換靜音狀態
+    toggleMute() {
+        this.isMuted = !this.isMuted;
+        localStorage.setItem('meowmenu_muted', this.isMuted);
+        console.log('[Audio] 靜音狀態:', this.isMuted ? '靜音' : '開啟');
+        return this.isMuted;
+    },
+
     // 音效資源對照表
     SOUNDS: {
         success: 'https://raw.githubusercontent.com/rse/soundfx/master/soundfx.d/ui_success_01.mp3',
@@ -32,6 +43,7 @@ const AudioManager = {
 
     // 播放合成音效 (不依賴網路，最高可靠性)
     playSynthetic(type) {
+        if (this.isMuted) return;
         try {
             this.initCtx();
             const osc = this.audioCtx.createOscillator();
@@ -90,6 +102,9 @@ const AudioManager = {
 
     // 播放音效
     play(type, volume = 0.5) {
+        if (this.isMuted) {
+            return Promise.resolve();
+        }
         // 先確保 Context 試圖啟動
         this.initCtx();
 

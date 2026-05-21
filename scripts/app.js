@@ -116,9 +116,90 @@ function initDOM() {
     DOM.editImagePickerArea = document.getElementById('editImagePickerArea');
     DOM.addCategoryBtn = document.getElementById('addCategoryBtn');
     DOM.newCategoryInput = document.getElementById('newCategoryInput');
+    DOM.muteBtn = document.getElementById('muteBtn');
+    DOM.mobileCartBtn = document.getElementById('mobileCartBtn');
+    DOM.mobileCartBadge = document.getElementById('mobileCartBadge');
+    DOM.cartOverlay = document.getElementById('cartOverlay');
+    DOM.closeCartBtn = document.getElementById('closeCartBtn');
+    DOM.cartSection = document.getElementById('cartSection');
+}
+
+function updateMuteButtonUI() {
+    if (!DOM.muteBtn) return;
+    if (AudioManager.isMuted) {
+        DOM.muteBtn.textContent = '🔇';
+        DOM.muteBtn.classList.add('muted');
+        DOM.muteBtn.title = '開啟音效';
+    } else {
+        DOM.muteBtn.textContent = '🔊';
+        DOM.muteBtn.classList.remove('muted');
+        DOM.muteBtn.title = '靜音音效';
+    }
+}
+
+function openMobileCart() {
+    if (!DOM.cartSection || !DOM.cartOverlay) return;
+    DOM.cartSection.classList.add('open');
+    DOM.cartOverlay.classList.add('show');
+}
+
+function closeMobileCart() {
+    if (!DOM.cartSection || !DOM.cartOverlay) return;
+    DOM.cartSection.classList.remove('open');
+    DOM.cartOverlay.classList.remove('show');
+}
+
+function updateMobileCartButton() {
+    if (!DOM.mobileCartBtn || !DOM.mobileCartBadge) return;
+    const totalCount = State.cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    if (totalCount > 0 && State.currentPage === 'order') {
+        DOM.mobileCartBtn.style.display = 'flex';
+        DOM.mobileCartBadge.textContent = totalCount;
+        
+        // 觸發彈跳動畫
+        DOM.mobileCartBtn.classList.remove('bounce-animation');
+        void DOM.mobileCartBtn.offsetWidth; // 強制瀏覽器重繪
+        DOM.mobileCartBtn.classList.add('bounce-animation');
+    } else {
+        DOM.mobileCartBtn.style.display = 'none';
+        closeMobileCart();
+    }
 }
 
 function initEventListeners() {
+    // 靜音切換
+    if (DOM.muteBtn) {
+        updateMuteButtonUI();
+        DOM.muteBtn.addEventListener('click', () => {
+            const isMuted = AudioManager.toggleMute();
+            updateMuteButtonUI();
+            if (!isMuted) {
+                AudioManager.play('click');
+            }
+        });
+    }
+
+    // 手機版購物車懸浮按鈕與遮罩
+    if (DOM.mobileCartBtn) {
+        DOM.mobileCartBtn.addEventListener('click', () => {
+            AudioManager.play('click');
+            openMobileCart();
+        });
+    }
+    if (DOM.closeCartBtn) {
+        DOM.closeCartBtn.addEventListener('click', () => {
+            AudioManager.play('click');
+            closeMobileCart();
+        });
+    }
+    if (DOM.cartOverlay) {
+        DOM.cartOverlay.addEventListener('click', () => {
+            AudioManager.play('click');
+            closeMobileCart();
+        });
+    }
+
     // 登入
     DOM.loginBtn.addEventListener('click', () => {
         AudioManager.play('click');
@@ -468,6 +549,9 @@ function switchPage(pageName) {
     } else if (pageName === 'menu') {
         renderMenuManagement();
     }
+
+    // 更新手機版懸浮購物車按鈕狀態
+    updateMobileCartButton();
 }
 
 // ========================================
@@ -599,6 +683,7 @@ function renderCart() {
     `;
         DOM.cartTotal.textContent = '$0';
         DOM.cartCheckoutBtn.disabled = true;
+        updateMobileCartButton();
         return;
     }
 
@@ -619,6 +704,7 @@ function renderCart() {
 
     DOM.cartTotal.textContent = '$' + total;
     DOM.cartCheckoutBtn.disabled = false;
+    updateMobileCartButton();
 }
 
 // ========================================

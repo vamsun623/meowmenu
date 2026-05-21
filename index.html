@@ -48,9 +48,12 @@
         <span>喵喵豬豬早餐店</span>
       </div>
 
-      <div class="navbar-user">
-        <span>👤</span>
-        <span id="userDisplay">訪客</span>
+      <div class="navbar-actions">
+        <button id="muteBtn" class="mute-btn" title="靜音/開啟音效">🔊</button>
+        <div class="navbar-user">
+          <span>👤</span>
+          <span id="userDisplay">訪客</span>
+        </div>
       </div>
 
       <div class="navbar-nav">
@@ -76,11 +79,14 @@
       <div id="menuGrid" class="menu-grid"></div>
 
       <!-- 購物車 -->
-      <div class="cart-section">
-        <h3 class="cart-title">
-          <span>🛒</span>
-          我的訂單
-        </h3>
+      <div class="cart-section" id="cartSection">
+        <div class="cart-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+          <h3 class="cart-title" style="margin-bottom: 0;">
+            <span>🛒</span>
+            我的訂單
+          </h3>
+          <button id="closeCartBtn" class="cart-close-btn" style="display: none;" title="關閉購物車">✕</button>
+        </div>
 
         <div id="cartItems" class="cart-items"></div>
 
@@ -280,6 +286,12 @@
       <p class="success-text"></p>
     </div>
   </div>
+
+  <!-- 手機版購物車遮罩與懸浮按鈕 -->
+  <div id="cartOverlay" class="cart-overlay"></div>
+  <button id="mobileCartBtn" class="mobile-cart-btn" style="display: none;" title="查看購物車">
+    <span class="badge" id="mobileCartBadge">0</span>🛒
+  </button>
 
   <!-- Scripts -->
   <script src="scripts/config.js"></script>

@@ -219,6 +219,38 @@ body {
   font-size: 28px;
 }
 
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.mute-btn {
+  background: var(--card-bg);
+  border: 2px solid var(--primary-pink);
+  border-radius: var(--radius-full);
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.mute-btn:hover {
+  transform: scale(1.1);
+  background: rgba(255, 182, 193, 0.2);
+  border-color: var(--primary-pink-dark);
+}
+
+.mute-btn.muted {
+  border-color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.05);
+}
+
 .navbar-user {
   display: flex;
   align-items: center;
@@ -1570,10 +1602,26 @@ body {
   }
 
   .cart-section {
-    position: relative;
-    bottom: 0;
+    position: fixed;
+    bottom: -100%; /* 從下方滑出隱藏 */
+    left: 0;
+    right: 0;
+    margin: 0;
+    background: white;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border: none;
+    border-top: 4px solid var(--primary-pink);
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+    z-index: 1001; /* 浮於其他內容之上 */
+    transition: bottom 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
     padding: var(--spacing-md);
-    margin-top: var(--spacing-md);
+  }
+
+  .cart-section.open {
+    bottom: 0; /* 開啟時滑到最下方貼齊 */
   }
 
   .cart-title {
@@ -1819,4 +1867,106 @@ body {
   align-items: center;
   gap: 12px;
   width: 100%;
+}
+
+/* ========================================
+   手機版懸浮購物車與遮罩樣式
+   ======================================== */
+.cart-close-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: var(--spacing-xs);
+  transition: color 0.2s;
+}
+
+.cart-close-btn:hover {
+  color: var(--danger);
+}
+
+.cart-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.cart-overlay.show {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mobile-cart-btn {
+  display: none;
+}
+
+@keyframes bounce-scale {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.bounce-animation {
+  animation: bounce-scale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@media (max-width: 768px) {
+  .cart-close-btn {
+    display: block;
+  }
+
+  .mobile-cart-btn {
+    display: flex;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: linear-gradient(135deg, var(--primary-pink), var(--primary-pink-dark));
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    box-shadow: 0 4px 16px rgba(255, 105, 180, 0.4);
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    cursor: pointer;
+    z-index: 999;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+
+  .mobile-cart-btn:active {
+    transform: scale(0.9);
+  }
+
+  .mobile-cart-btn .badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--danger);
+    color: white;
+    border-radius: 50%;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 4px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+  }
 }

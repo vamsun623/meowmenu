@@ -19,46 +19,59 @@ const API = {
             return null;
         }
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超時
+        const maxRetries = 3;
+        let lastError = null;
 
-        try {
-            const response = await fetch(CONFIG.API_URL, {
-                method: 'POST',
-                redirect: 'follow',
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8',
-                },
-                body: JSON.stringify({ action, ...data }),
-                signal: controller.signal
-            });
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超時
 
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-                throw new Error('API 伺服器狀態異常 (' + response.status + ')');
-            }
-
-            const text = await response.text();
             try {
-                return JSON.parse(text);
-            } catch {
-                console.error('JSON 解析失敗:', text);
-                return { success: false, error: '伺服器傳回非 JSON 格式資料' };
-            }
-        } catch (error) {
-            clearTimeout(timeoutId);
-            console.error('API 請求過程發生異常:', error);
+                const response = await fetch(CONFIG.API_URL, {
+                    method: 'POST',
+                    redirect: 'follow',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                    body: JSON.stringify({ action, ...data }),
+                    signal: controller.signal
+                });
 
-            let errorMsg = error.message;
-            if (error.name === 'AbortError') {
-                errorMsg = '請求超時 (10秒)，伺服器可能正在忙碌中';
-            } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                errorMsg = '網路連線失敗或跨網域(CORS)限制';
-            }
+                clearTimeout(timeoutId);
 
-            return { success: false, error: errorMsg };
+                if (!response.ok) {
+                    throw new Error('API 伺服器狀態異常 (' + response.status + ')');
+                }
+
+                const text = await response.text();
+                try {
+                    return JSON.parse(text);
+                } catch {
+                    console.error('JSON 解析失敗:', text);
+                    return { success: false, error: '伺服器傳回非 JSON 格式資料' };
+                }
+            } catch (error) {
+                clearTimeout(timeoutId);
+                lastError = error;
+                console.warn(`[API] 請求 ${action} 失敗 (嘗試第 ${attempt}/${maxRetries} 次):`, error.message);
+
+                if (attempt < maxRetries) {
+                    const delayMs = attempt * 1000; // 遞增延遲：1000ms, 2000ms
+                    await new Promise(resolve => setTimeout(resolve, delayMs));
+                }
+            }
         }
+
+        // 所有重試均失敗後，返回錯誤訊息
+        console.error(`[API] 請求 ${action} 在重試 ${maxRetries} 次後依然失敗:`, lastError);
+        let errorMsg = lastError.message;
+        if (lastError.name === 'AbortError') {
+            errorMsg = '請求超時 (10秒)，伺服器可能正在忙碌中';
+        } else if (lastError.name === 'TypeError' && lastError.message.includes('fetch')) {
+            errorMsg = '網路連線失敗或跨網域(CORS)限制';
+        }
+
+        return { success: false, error: errorMsg };
     },
 
     // 紀錄日誌到控制台
