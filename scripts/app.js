@@ -285,7 +285,7 @@ async function loadAvailableImages() {
     // 嘗試載入 assets/images 資料夾中的圖片
     // 由於前端無法直接列出資料夾內容，我們使用一個圖片清單檔案
     try {
-        const response = await fetch('assets/images/images.json');
+        const response = await fetch('assets/images/images.json?t=' + Date.now());
         if (response.ok) {
             State.availableImages = await response.json();
         }
