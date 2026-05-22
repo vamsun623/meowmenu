@@ -368,6 +368,7 @@ body {
 }
 
 .menu-item {
+  position: relative;
   background: var(--card-bg);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -2118,4 +2119,93 @@ body {
   100% {
     transform: translateX(100%);
   }
+}
+
+/* ========================================
+   點餐折價與熱門標章額外樣式
+   ======================================== */
+
+/* 熱門商品標章 */
+.popular-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: linear-gradient(135deg, #FF4500 0%, #FF8C00 100%);
+  color: var(--text-light);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: pulse-glow 2s infinite alternate;
+}
+
+@keyframes pulse-glow {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 6px rgba(255, 69, 0, 0.4);
+  }
+  100% {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 69, 0, 0.8);
+  }
+}
+
+/* 購物車折價提示與雙價格顯示 */
+.cart-promo-msg {
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.cart-promo-msg.active {
+  display: block;
+}
+
+.cart-promo-msg.info {
+  background-color: rgba(79, 195, 247, 0.15);
+  border: 1px solid var(--info);
+  color: #0288D1;
+}
+
+.cart-promo-msg.success {
+  background-color: rgba(126, 211, 33, 0.15);
+  border: 1px solid var(--success);
+  color: #558B2F;
+}
+
+.cart-promo-msg .promo-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+.discounted-price {
+  color: var(--danger);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* 歷史訂單折價資訊 */
+.order-discount-details {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: right;
+  margin-top: 4px;
+  font-weight: 500;
 }

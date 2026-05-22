@@ -589,6 +589,27 @@ function getCategoryEmoji(category) {
     return emojis[category] || '🍴';
 }
 
+// 統計已送餐訂單(status === 'delivered')的各品項銷售量，回傳前三名的品項 ID 陣列
+function getPopularItemIds() {
+    const sales = {};
+    State.orders.forEach(order => {
+        if (order.status === 'delivered' && Array.isArray(order.items)) {
+            order.items.forEach(item => {
+                const itemId = item.id;
+                const qty = item.quantity || 0;
+                sales[itemId] = (sales[itemId] || 0) + qty;
+            });
+        }
+    });
+
+    return Object.keys(sales)
+        .map(id => ({ id: parseInt(id), qty: sales[id] }))
+        .filter(item => item.qty > 0)
+        .sort((a, b) => b.qty - a.qty)
+        .slice(0, 3)
+        .map(item => item.id);
+}
+
 function renderMenuItems() {
     if (State.menu.length === 0) {
         if (!State.isSyncDone) {
@@ -620,13 +641,18 @@ function renderMenuItems() {
         return;
     }
 
+    const popularItemIds = getPopularItemIds();
+
     DOM.menuGrid.innerHTML = filteredMenu.map(item => {
         const cartItem = State.cart.find(c => c.id === item.id);
         const quantity = cartItem ? cartItem.quantity : 0;
         const imageHtml = getItemImageHtml(item.image);
+        const isPopular = popularItemIds.includes(item.id);
+        const popularBadgeHtml = isPopular ? `<span class="popular-badge">🔥 熱門</span>` : '';
 
         return `
       <div class="menu-item" data-id="${item.id}">
+        ${popularBadgeHtml}
         <div class="menu-item-image">${imageHtml}</div>
         <div class="menu-item-info">
           <div class="menu-item-name">${item.name}</div>
@@ -707,7 +733,25 @@ function removeFromCart(itemId) {
     renderCart();
 }
 
+// 計算折扣金額與折扣描述
+function calculateDiscountedTotal(subtotal) {
+    let total = subtotal;
+    let discountApplied = '';
+
+    if (subtotal >= 40) {
+        total = Math.round(subtotal * 0.8);
+        discountApplied = '8折';
+    } else if (subtotal >= 30) {
+        total = Math.round(subtotal * 0.9);
+        discountApplied = '9折';
+    }
+
+    return { total, discountApplied };
+}
+
 function renderCart() {
+    const promoEl = document.getElementById('cartPromoMsg');
+
     if (State.cart.length === 0) {
         DOM.cartItems.innerHTML = `
       <div class="cart-empty">
@@ -717,11 +761,18 @@ function renderCart() {
     `;
         DOM.cartTotal.textContent = '$0';
         DOM.cartCheckoutBtn.disabled = true;
+
+        if (promoEl) {
+            promoEl.innerHTML = `<div class="promo-badge info">💡 每筆訂單滿 30 元打 9 折、滿 40 元打 8 折</div>`;
+            promoEl.className = 'cart-promo-msg active info';
+        }
+
         updateMobileCartButton();
         return;
     }
 
-    const total = State.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const subtotal = State.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const { total, discountApplied } = calculateDiscountedTotal(subtotal);
 
     DOM.cartItems.innerHTML = State.cart.map(item => `
     <div class="cart-item">
@@ -740,7 +791,27 @@ function renderCart() {
     </div>
   `).join('');
 
-    DOM.cartTotal.textContent = '$' + total;
+    if (promoEl) {
+        if (subtotal >= 40) {
+            promoEl.innerHTML = `<div class="promo-badge success">🎉 滿 $40 已享 8 折優惠！</div>`;
+            promoEl.className = 'cart-promo-msg active success';
+        } else if (subtotal >= 30) {
+            promoEl.innerHTML = `<div class="promo-badge success">🎉 滿 $30 已享 9 折優惠！</div>`;
+            promoEl.className = 'cart-promo-msg active success';
+        } else {
+            const diff30 = 30 - subtotal;
+            const diff40 = 40 - subtotal;
+            promoEl.innerHTML = `<div class="promo-badge info">💡 再滿 $${diff30} 元打 9 折，滿 $${diff40} 元打 8 折</div>`;
+            promoEl.className = 'cart-promo-msg active info';
+        }
+    }
+
+    if (total < subtotal) {
+        DOM.cartTotal.innerHTML = `<span class="original-price">$${subtotal}</span><span class="discounted-price">$${total}</span>`;
+    } else {
+        DOM.cartTotal.textContent = '$' + total;
+    }
+
     DOM.cartCheckoutBtn.disabled = false;
     updateMobileCartButton();
 }
@@ -805,11 +876,14 @@ async function handleCheckout(e) {
         const minute = document.getElementById('pickupMinute').value;
         const note = document.getElementById('orderNote').value.trim();
 
+        const subtotal = State.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const { total } = calculateDiscountedTotal(subtotal);
+
         const order = {
             id: generateOrderId(),
             customer: State.currentUser,
             items: [...State.cart],
-            total: State.cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+            total: total,
             pickupTime: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`,
             note: note,
             status: 'pending',
@@ -917,6 +991,18 @@ async function renderOrders() {
 
         <div class="order-total">
           總計：$${order.total}
+          ${(() => {
+              const subtotal = order.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+              if (order.total < subtotal) {
+                  const discountPercent = subtotal >= 40 ? '8折' : '9折';
+                  return `
+                    <div class="order-discount-details">
+                      原價: <span style="text-decoration: line-through;">$${subtotal}</span> (已享 ${discountPercent})
+                    </div>
+                  `;
+              }
+              return '';
+          })()}
         </div>
 
         ${State.isAdmin && order.status === 'pending' ? `
@@ -953,6 +1039,7 @@ async function updateOrderStatus(orderId, status) {
         order.status = status;
     }
     renderOrders();
+    renderMenuItems();
 
     const message = status === 'delivered' ? '訂單已標記為送餐完成！' : '訂單已取消！';
     showSuccessMessage(status === 'delivered' ? '✅' : '❌', message);
@@ -994,6 +1081,7 @@ async function cancelMyOrder(orderId) {
     // 樂觀更新：立即更新 UI
     order.status = 'cancelled';
     renderOrders();
+    renderMenuItems();
     AudioManager.play('error');
     showSuccessMessage('❌', '您的訂單已取消！');
 
