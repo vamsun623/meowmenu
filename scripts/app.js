@@ -891,7 +891,7 @@ async function handleCheckout(e) {
 
         if (soldOutItems.length > 0) {
             const names = soldOutItems.map(item => item.name).join('、');
-            showSuccessMessage('⚠️', `抱歉，${names} 已售完，請從購物車中移除再行送出。`);
+            showSuccessMessage('⚠️', `抱歉，${names} 已售完，請從購物車中移除再行送出。`, '商品已售完');
             renderCart();
             return;
         }
@@ -1066,7 +1066,8 @@ async function updateOrderStatus(orderId, status) {
     renderMenuItems();
 
     const message = status === 'delivered' ? '訂單已標記為送餐完成！' : '訂單已取消！';
-    showSuccessMessage(status === 'delivered' ? '✅' : '❌', message);
+    const title = status === 'delivered' ? '送餐完成' : '訂單已取消';
+    showSuccessMessage(status === 'delivered' ? '✅' : '❌', message, title);
 
     // 背景同步到 API
     try {
@@ -1107,7 +1108,7 @@ async function cancelMyOrder(orderId) {
     renderOrders();
     renderMenuItems();
     AudioManager.play('error');
-    showSuccessMessage('❌', '您的訂單已取消！');
+    showSuccessMessage('❌', '您的訂單已取消！', '訂單已取消');
 
     // 背景同步到 API
     try {
@@ -1236,6 +1237,7 @@ function renderMenuCardsMobile() {
       </div>
       <div class="item-actions">
         <button class="btn btn-primary" onclick="editMenuItem(${item.id})">編輯</button>
+        <button class="btn btn-danger" onclick="deleteMenuItem(${item.id})">刪除</button>
       </div>
     </div>
   `;
@@ -1560,7 +1562,7 @@ async function deleteMenuItem(itemId) {
     renderMenuCardsMobile();
     renderOrderPage();
 
-    showSuccessMessage('🗑️', `餐點「${item.name}」已刪除！`);
+    showSuccessMessage('🗑️', `餐點「${item.name}」已刪除！`, '刪除成功');
 }
 
 // ========================================
@@ -1577,9 +1579,10 @@ function closeModal(modal) {
     document.body.style.overflow = '';
 }
 
-function showSuccessMessage(icon, text) {
+function showSuccessMessage(icon, text, title = '成功！') {
     const modal = DOM.successModal;
     modal.querySelector('.success-icon').textContent = icon;
+    modal.querySelector('.success-title').textContent = title;
     modal.querySelector('.success-text').textContent = text;
 
     modal.classList.add('show');
