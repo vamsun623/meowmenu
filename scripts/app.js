@@ -626,7 +626,6 @@ function renderMenuItems() {
     }
 
     const filteredMenu = State.menu.filter(item => {
-        if (!item.enabled) return false;
         if (State.selectedCategory === 'all') return true;
         return item.category === State.selectedCategory;
     });
@@ -1170,23 +1169,15 @@ function renderMenuTable() {
       <td>${item.category}</td>
       <td>$${item.price}</td>
       <td>
-        <div class="table-switch-container">
-          <div class="switch-row">
-            <label class="toggle-switch" title="啟用狀態">
-              <input type="checkbox" ${item.enabled ? 'checked' : ''} 
-                     onchange="toggleMenuItem(${item.id}, this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-            <span class="switch-label">啟用</span>
-          </div>
-          <div class="switch-row">
-            <label class="toggle-switch toggle-switch-danger" title="設定售完">
-              <input type="checkbox" ${item.soldOut ? 'checked' : ''} 
-                     onchange="toggleMenuItemSoldOut(${item.id}, this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-            <span class="switch-label">售完</span>
-          </div>
+        <div class="table-switch-container" style="flex-direction: row; gap: 8px; justify-content: center; align-items: center;">
+          <label class="toggle-switch toggle-switch-danger" title="設定售完">
+            <input type="checkbox" ${item.soldOut ? 'checked' : ''} 
+                   onchange="toggleMenuItemSoldOut(${item.id}, this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="switch-label ${item.soldOut ? 'text-danger' : 'text-success'}" style="font-weight: 600; font-size: 13px;">
+            ${item.soldOut ? '售完' : '可銷售'}
+          </span>
         </div>
       </td>
       <td>
@@ -1216,23 +1207,15 @@ function renderMenuCardsMobile() {
           <span>${item.category}</span> · 
           <span class="item-price">$${item.price}</span>
         </div>
-        <div class="table-switch-container" style="flex-direction: row; gap: 12px; margin-top: 8px; justify-content: flex-start;">
-          <div class="switch-row">
-            <label class="toggle-switch" style="transform: scale(0.85); transform-origin: left center;">
-              <input type="checkbox" ${item.enabled ? 'checked' : ''} 
-                     onchange="toggleMenuItem(${item.id}, this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-            <span class="switch-label">啟用</span>
-          </div>
-          <div class="switch-row">
-            <label class="toggle-switch toggle-switch-danger" style="transform: scale(0.85); transform-origin: left center;">
-              <input type="checkbox" ${item.soldOut ? 'checked' : ''} 
-                     onchange="toggleMenuItemSoldOut(${item.id}, this.checked)">
-              <span class="toggle-slider"></span>
-            </label>
-            <span class="switch-label">售完</span>
-          </div>
+        <div class="table-switch-container" style="flex-direction: row; gap: 8px; margin-top: 8px; justify-content: flex-start; align-items: center;">
+          <label class="toggle-switch toggle-switch-danger" style="transform: scale(0.85); transform-origin: left center; flex-shrink: 0;">
+            <input type="checkbox" ${item.soldOut ? 'checked' : ''} 
+                   onchange="toggleMenuItemSoldOut(${item.id}, this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="switch-label ${item.soldOut ? 'text-danger' : 'text-success'}" style="font-weight: 600; font-size: 13px;">
+            ${item.soldOut ? '售完' : '可銷售'}
+          </span>
         </div>
       </div>
       <div class="item-actions">
@@ -1448,7 +1431,7 @@ async function handleAddMenuItem(e) {
     const price = parseInt(document.getElementById('menuItemPrice').value);
     const category = document.getElementById('menuCategorySelect').value;
     const image = document.getElementById('menuItemImage').value || '🍴';
-    const enabled = document.getElementById('menuItemEnabled').checked;
+    const enabled = true;
     const soldOut = document.getElementById('menuItemSoldOut').checked;
 
     if (!name || !price || !category) {
@@ -1490,7 +1473,6 @@ function editMenuItem(itemId) {
     document.getElementById('editMenuPrice').value = item.price;
     document.getElementById('editMenuCategory').value = item.category;
     document.getElementById('editMenuImage').value = item.image || '🍴';
-    document.getElementById('editMenuEnabled').checked = item.enabled !== false;
     document.getElementById('editMenuSoldOut').checked = item.soldOut === true;
 
     renderEmojiPicker('edit');
@@ -1506,7 +1488,7 @@ async function handleEditMenuItem(e) {
     const price = parseInt(document.getElementById('editMenuPrice').value);
     const category = document.getElementById('editMenuCategory').value;
     const image = document.getElementById('editMenuImage').value || '🍴';
-    const enabled = document.getElementById('editMenuEnabled').checked;
+    const enabled = true;
     const soldOut = document.getElementById('editMenuSoldOut').checked;
 
     const item = State.menu.find(m => m.id === id);
@@ -1545,6 +1527,8 @@ async function toggleMenuItemSoldOut(itemId, soldOut) {
 
     item.soldOut = soldOut;
     await API.updateMenuItem(item);
+    renderMenuTable();
+    renderMenuCardsMobile();
     renderOrderPage();
 }
 
