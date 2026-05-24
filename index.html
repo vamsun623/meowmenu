@@ -169,6 +169,14 @@
                 <input type="hidden" id="menuItemImage" value="🍴">
               </div>
             </div>
+            <div class="form-group" style="display: flex; gap: 15px; margin-bottom: var(--spacing-md);">
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
+                <input type="checkbox" id="menuItemEnabled" checked> 啟用此品項
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; color: var(--danger);">
+                <input type="checkbox" id="menuItemSoldOut"> 設定為售完
+              </label>
+            </div>
             <div class="form-group" style="display: flex; align-items: flex-end;">
               <button type="submit" class="btn btn-success" style="width: 100%;" onclick="AudioManager.play('click')">✓
                 新增餐點</button>
@@ -188,7 +196,7 @@
                 <th>名稱</th>
                 <th>分類</th>
                 <th>價格</th>
-                <th>啟用</th>
+                <th>狀態</th>
                 <th>操作</th>
               </tr>
             </thead>
@@ -270,6 +278,15 @@
             <div id="editImagePickerArea" class="image-preview-area" style="display: none;"></div>
             <input type="hidden" id="editMenuImage" value="🍴">
           </div>
+        </div>
+
+        <div class="form-group" style="display: flex; gap: 15px; margin-bottom: var(--spacing-md);">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer;">
+            <input type="checkbox" id="editMenuEnabled"> 啟用此品項
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; color: var(--danger);">
+            <input type="checkbox" id="editMenuSoldOut"> 設定為售完
+          </label>
         </div>
 
         <div class="modal-actions">

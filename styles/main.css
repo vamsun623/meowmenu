@@ -2209,3 +2209,106 @@ body {
   margin-top: 4px;
   font-weight: 500;
 }
+
+/* ========================================
+   餐點售完狀態控制與前台壓印樣式
+   ======================================== */
+
+/* 紅色/危險色系切換開關 */
+.toggle-switch-danger input:checked + .toggle-slider {
+  background: var(--danger) !important;
+}
+
+/* 列表表格中的雙開關排列容器 */
+.table-switch-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0;
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.switch-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  min-width: 24px;
+}
+
+/* 售完品項前台樣式 */
+.menu-item.sold-out {
+  border-color: #ddd;
+}
+
+.menu-item.sold-out .menu-item-image {
+  filter: grayscale(0.9) opacity(0.5);
+  transition: all 0.3s ease;
+}
+
+.menu-item.sold-out .menu-item-info {
+  opacity: 0.6;
+}
+
+/* 售完遮罩與印章 */
+.menu-item-soldout-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 140px; /* 貼合圖片高度 */
+  background: rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.soldout-stamp {
+  border: 4px double var(--danger);
+  color: var(--danger);
+  background-color: rgba(255, 255, 255, 0.95);
+  font-size: 22px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  transform: rotate(-12deg);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  letter-spacing: 2px;
+  user-select: none;
+  animation: stamp-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes stamp-pop {
+  0% {
+    transform: scale(2.5) rotate(-35deg);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) rotate(-12deg);
+    opacity: 1;
+  }
+}
+
+/* 購物車已售完項目樣式 */
+.cart-item.sold-out-item {
+  background-color: rgba(255, 107, 107, 0.05);
+}
+
+.cart-item.sold-out-item .cart-item-name {
+  color: var(--text-secondary);
+}
+
+.cart-item-name .sold-out-label {
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: bold;
+  margin-left: 6px;
+}

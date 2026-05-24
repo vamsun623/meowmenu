@@ -71,29 +71,29 @@ function initSpreadsheet() {
     let menuSheet = ss.getSheetByName(SHEETS.MENU);
     if (!menuSheet) {
         menuSheet = ss.insertSheet(SHEETS.MENU);
-        menuSheet.getRange('A1:F1').setValues([[
-            '餐點編號', '餐點名稱', '價格', '分類', '圖示', '啟用'
+        menuSheet.getRange('A1:G1').setValues([[
+            '餐點編號', '餐點名稱', '價格', '分類', '圖示', '啟用', '售完'
         ]]);
-        menuSheet.getRange('A1:F1').setFontWeight('bold');
+        menuSheet.getRange('A1:G1').setFontWeight('bold');
 
         // 新增預設菜單
         const defaultMenu = [
-            [1, '原味蛋餅', 35, '蛋餅', '🥚', true],
-            [2, '起司蛋餅', 45, '蛋餅', '🧀', true],
-            [3, '玉米蛋餅', 45, '蛋餅', '🌽', true],
-            [4, '鮪魚蛋餅', 50, '蛋餅', '🐟', true],
-            [5, '培根蛋餅', 50, '蛋餅', '🥓', true],
-            [6, '原味鬆餅', 40, '鬆餅', '🧇', true],
-            [7, '巧克力鬆餅', 50, '鬆餅', '🍫', true],
-            [8, '蜂蜜鬆餅', 50, '鬆餅', '🍯', true],
-            [9, '奶油鬆餅', 45, '鬆餅', '🧈', true],
-            [10, '紅茶', 20, '飲料', '🍵', true],
-            [11, '奶茶', 30, '飲料', '🥛', true],
-            [12, '豆漿', 25, '飲料', '🫘', true],
-            [13, '咖啡', 35, '飲料', '☕', true],
-            [14, '柳橙汁', 40, '飲料', '🍊', true],
+            [1, '原味蛋餅', 35, '蛋餅', '🥚', true, false],
+            [2, '起司蛋餅', 45, '蛋餅', '🧀', true, false],
+            [3, '玉米蛋餅', 45, '蛋餅', '🌽', true, false],
+            [4, '鮪魚蛋餅', 50, '蛋餅', '🐟', true, false],
+            [5, '培根蛋餅', 50, '蛋餅', '🥓', true, false],
+            [6, '原味鬆餅', 40, '鬆餅', '🧇', true, false],
+            [7, '巧克力鬆餅', 50, '鬆餅', '🍫', true, false],
+            [8, '蜂蜜鬆餅', 50, '鬆餅', '🍯', true, false],
+            [9, '奶油鬆餅', 45, '鬆餅', '🧈', true, false],
+            [10, '紅茶', 20, '飲料', '🍵', true, false],
+            [11, '奶茶', 30, '飲料', '🥛', true, false],
+            [12, '豆漿', 25, '飲料', '🫘', true, false],
+            [13, '咖啡', 35, '飲料', '☕', true, false],
+            [14, '柳橙汁', 40, '飲料', '🍊', true, false],
         ];
-        menuSheet.getRange(2, 1, defaultMenu.length, 6).setValues(defaultMenu);
+        menuSheet.getRange(2, 1, defaultMenu.length, 7).setValues(defaultMenu);
     }
 
     // 建立分類表
@@ -262,14 +262,15 @@ function getMenu() {
         return { success: true, data: [] };
     }
 
-    const data = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+    const data = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
     const menu = data.map(row => ({
         id: row[0],
         name: row[1],
         price: row[2],
         category: row[3],
         image: row[4],
-        enabled: row[5] === true || row[5] === 'TRUE' || row[5] === 'true'
+        enabled: row[5] === true || row[5] === 'TRUE' || row[5] === 'true',
+        soldOut: row[6] === true || row[6] === 'TRUE' || row[6] === 'true'
     }));
 
     return { success: true, data: menu };
@@ -296,7 +297,8 @@ function addMenuItem(item) {
         item.price,
         item.category,
         item.image || '🍴',
-        item.enabled !== false
+        item.enabled !== false,
+        item.soldOut === true
     ]);
 
     return { success: true, data: item };
@@ -309,12 +311,13 @@ function updateMenuItem(item) {
 
     for (let i = 2; i <= lastRow; i++) {
         if (sheet.getRange(i, 1).getValue() === item.id) {
-            sheet.getRange(i, 2, 1, 5).setValues([[
+            sheet.getRange(i, 2, 1, 6).setValues([[
                 item.name,
                 item.price,
                 item.category,
                 item.image,
-                item.enabled
+                item.enabled,
+                item.soldOut === true
             ]]);
             return { success: true };
         }
@@ -439,7 +442,7 @@ function updateMenuOrder(menuIds) {
     if (lastRow < 2) return { success: true, message: '菜單為空，無需排序' };
 
     // 讀取目前所有菜單資料
-    const data = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+    const data = sheet.getRange(2, 1, lastRow - 1, 7).getValues();
     const menuMap = {};
     data.forEach(row => {
         const id = row[0];
@@ -460,9 +463,9 @@ function updateMenuOrder(menuIds) {
 
     if (sortedRows.length > 0) {
         // 先清空原本區域
-        sheet.getRange(2, 1, lastRow - 1, 6).clearContent();
+        sheet.getRange(2, 1, lastRow - 1, 7).clearContent();
         // 寫入新排序
-        sheet.getRange(2, 1, sortedRows.length, 6).setValues(sortedRows);
+        sheet.getRange(2, 1, sortedRows.length, 7).setValues(sortedRows);
     }
 
     return { success: true, count: sortedRows.length };

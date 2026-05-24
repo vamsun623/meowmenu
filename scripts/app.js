@@ -649,10 +649,12 @@ function renderMenuItems() {
         const imageHtml = getItemImageHtml(item.image);
         const isPopular = popularItemIds.includes(item.id);
         const popularBadgeHtml = isPopular ? `<span class="popular-badge">🔥 熱門</span>` : '';
+        const soldOutOverlayHtml = item.soldOut ? `<div class="menu-item-soldout-overlay"><div class="soldout-stamp">已售完</div></div>` : '';
 
         return `
-      <div class="menu-item" data-id="${item.id}">
+      <div class="menu-item ${item.soldOut ? 'sold-out' : ''}" data-id="${item.id}">
         ${popularBadgeHtml}
+        ${soldOutOverlayHtml}
         <div class="menu-item-image">${imageHtml}</div>
         <div class="menu-item-info">
           <div class="menu-item-name">${item.name}</div>
@@ -660,7 +662,7 @@ function renderMenuItems() {
           <div class="menu-item-controls">
             <button class="quantity-btn" onclick="updateCart(${item.id}, -1)" ${quantity === 0 ? 'disabled' : ''}>−</button>
             <span class="quantity-display">${quantity}</span>
-            <button class="quantity-btn" onclick="updateCart(${item.id}, 1)">+</button>
+            <button class="quantity-btn" onclick="updateCart(${item.id}, 1)" ${item.soldOut ? 'disabled' : ''}>+</button>
           </div>
         </div>
       </div>
@@ -698,6 +700,11 @@ function getItemImageHtml(image) {
 function updateCart(itemId, change) {
     const menuItem = State.menu.find(m => m.id === itemId);
     if (!menuItem) return;
+
+    if (change > 0 && menuItem.soldOut) {
+        showSuccessMessage('⚠️', `抱歉，${menuItem.name} 已售完！`);
+        return;
+    }
 
     const cartIndex = State.cart.findIndex(c => c.id === itemId);
 
@@ -774,14 +781,17 @@ function renderCart() {
     const subtotal = State.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const { total, discountApplied } = calculateDiscountedTotal(subtotal);
 
-    DOM.cartItems.innerHTML = State.cart.map(item => `
-    <div class="cart-item">
+    DOM.cartItems.innerHTML = State.cart.map(item => {
+        const menuItem = State.menu.find(m => m.id === item.id);
+        const isSoldOut = menuItem ? menuItem.soldOut === true : false;
+        return `
+    <div class="cart-item ${isSoldOut ? 'sold-out-item' : ''}">
       <div class="cart-item-left">
-        <span class="cart-item-name">${item.name}</span>
+        <span class="cart-item-name">${item.name}${isSoldOut ? '<span class="sold-out-label">(已售完)</span>' : ''}</span>
         <div class="cart-item-qty-control">
           <button class="cart-qty-btn minus" onclick="updateCart(${item.id}, -1)">-</button>
           <span class="cart-qty-display">${item.quantity}</span>
-          <button class="cart-qty-btn plus" onclick="updateCart(${item.id}, 1)">+</button>
+          <button class="cart-qty-btn plus" onclick="updateCart(${item.id}, 1)" ${isSoldOut ? 'disabled' : ''}>+</button>
         </div>
       </div>
       <div class="cart-item-right">
@@ -789,7 +799,8 @@ function renderCart() {
         <button class="cart-item-remove" onclick="removeFromCart(${item.id})" title="刪除此品項">✕</button>
       </div>
     </div>
-  `).join('');
+  `;
+    }).join('');
 
     if (promoEl) {
         if (subtotal >= 40) {
@@ -1145,11 +1156,24 @@ function renderMenuTable() {
       <td>${item.category}</td>
       <td>$${item.price}</td>
       <td>
-        <label class="toggle-switch">
-          <input type="checkbox" ${item.enabled ? 'checked' : ''} 
-                 onchange="toggleMenuItem(${item.id}, this.checked)">
-          <span class="toggle-slider"></span>
-        </label>
+        <div class="table-switch-container">
+          <div class="switch-row">
+            <label class="toggle-switch" title="啟用狀態">
+              <input type="checkbox" ${item.enabled ? 'checked' : ''} 
+                     onchange="toggleMenuItem(${item.id}, this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="switch-label">啟用</span>
+          </div>
+          <div class="switch-row">
+            <label class="toggle-switch toggle-switch-danger" title="設定售完">
+              <input type="checkbox" ${item.soldOut ? 'checked' : ''} 
+                     onchange="toggleMenuItemSoldOut(${item.id}, this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="switch-label">售完</span>
+          </div>
+        </div>
       </td>
       <td>
         <div class="menu-table-actions">
@@ -1177,6 +1201,24 @@ function renderMenuCardsMobile() {
         <div class="item-meta">
           <span>${item.category}</span> · 
           <span class="item-price">$${item.price}</span>
+        </div>
+        <div class="table-switch-container" style="flex-direction: row; gap: 12px; margin-top: 8px; justify-content: flex-start;">
+          <div class="switch-row">
+            <label class="toggle-switch" style="transform: scale(0.85); transform-origin: left center;">
+              <input type="checkbox" ${item.enabled ? 'checked' : ''} 
+                     onchange="toggleMenuItem(${item.id}, this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="switch-label">啟用</span>
+          </div>
+          <div class="switch-row">
+            <label class="toggle-switch toggle-switch-danger" style="transform: scale(0.85); transform-origin: left center;">
+              <input type="checkbox" ${item.soldOut ? 'checked' : ''} 
+                     onchange="toggleMenuItemSoldOut(${item.id}, this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="switch-label">售完</span>
+          </div>
         </div>
       </div>
       <div class="item-actions">
@@ -1391,6 +1433,8 @@ async function handleAddMenuItem(e) {
     const price = parseInt(document.getElementById('menuItemPrice').value);
     const category = document.getElementById('menuCategorySelect').value;
     const image = document.getElementById('menuItemImage').value || '🍴';
+    const enabled = document.getElementById('menuItemEnabled').checked;
+    const soldOut = document.getElementById('menuItemSoldOut').checked;
 
     if (!name || !price || !category) {
         alert('請填寫完整資訊！');
@@ -1402,7 +1446,8 @@ async function handleAddMenuItem(e) {
         price,
         category,
         image,
-        enabled: true
+        enabled,
+        soldOut
     };
 
     AudioManager.play('click');
@@ -1430,6 +1475,8 @@ function editMenuItem(itemId) {
     document.getElementById('editMenuPrice').value = item.price;
     document.getElementById('editMenuCategory').value = item.category;
     document.getElementById('editMenuImage').value = item.image || '🍴';
+    document.getElementById('editMenuEnabled').checked = item.enabled !== false;
+    document.getElementById('editMenuSoldOut').checked = item.soldOut === true;
 
     renderEmojiPicker('edit');
 
@@ -1444,6 +1491,8 @@ async function handleEditMenuItem(e) {
     const price = parseInt(document.getElementById('editMenuPrice').value);
     const category = document.getElementById('editMenuCategory').value;
     const image = document.getElementById('editMenuImage').value || '🍴';
+    const enabled = document.getElementById('editMenuEnabled').checked;
+    const soldOut = document.getElementById('editMenuSoldOut').checked;
 
     const item = State.menu.find(m => m.id === id);
     if (!item) return;
@@ -1452,6 +1501,8 @@ async function handleEditMenuItem(e) {
     item.price = price;
     item.category = category;
     item.image = image;
+    item.enabled = enabled;
+    item.soldOut = soldOut;
 
     AudioManager.play('click');
     await API.updateMenuItem(item);
@@ -1469,6 +1520,15 @@ async function toggleMenuItem(itemId, enabled) {
     if (!item) return;
 
     item.enabled = enabled;
+    await API.updateMenuItem(item);
+    renderOrderPage();
+}
+
+async function toggleMenuItemSoldOut(itemId, soldOut) {
+    const item = State.menu.find(m => m.id === itemId);
+    if (!item) return;
+
+    item.soldOut = soldOut;
     await API.updateMenuItem(item);
     renderOrderPage();
 }
