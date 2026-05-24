@@ -116,9 +116,28 @@ const API = {
     async getMenu() {
         const result = await this.request('getMenu');
         if (result && result.success) {
+            const localMenu = LocalStorage.getMenu();
+            const mergedData = result.data.map(item => {
+                const localItem = localMenu.find(m => m.id === item.id);
+                
+                // 檢查伺服器回傳值，若為 undefined 則合併本地狀態以防被舊版 GAS 覆蓋
+                const isEnabled = item.enabled !== undefined ? 
+                    (item.enabled === true || item.enabled === 'TRUE' || item.enabled === 'true') : 
+                    (localItem ? localItem.enabled !== false : true);
+                    
+                const isSoldOut = item.soldOut !== undefined ? 
+                    (item.soldOut === true || item.soldOut === 'TRUE' || item.soldOut === 'true') : 
+                    (localItem ? localItem.soldOut === true : false);
+
+                return {
+                    ...item,
+                    enabled: isEnabled,
+                    soldOut: isSoldOut
+                };
+            });
             // 同步到本地儲存
-            localStorage.setItem(LocalStorage.KEYS.MENU, JSON.stringify(result.data));
-            return result.data;
+            localStorage.setItem(LocalStorage.KEYS.MENU, JSON.stringify(mergedData));
+            return mergedData;
         }
         return LocalStorage.getMenu();
     },

@@ -883,6 +883,19 @@ async function handleCheckout(e) {
     }
 
     try {
+        // 檢查購物車內是否有已售完的商品
+        const soldOutItems = State.cart.filter(cartItem => {
+            const menuItem = State.menu.find(m => m.id === cartItem.id);
+            return menuItem && menuItem.soldOut;
+        });
+
+        if (soldOutItems.length > 0) {
+            const names = soldOutItems.map(item => item.name).join('、');
+            showSuccessMessage('⚠️', `抱歉，${names} 已售完，請從購物車中移除再行送出。`);
+            renderCart();
+            return;
+        }
+
         const hour = document.getElementById('pickupHour').value;
         const minute = document.getElementById('pickupMinute').value;
         const note = document.getElementById('orderNote').value.trim();
